@@ -32,7 +32,16 @@ There are two things you can do about this warning:
 
 (global-set-key (kbd "M-x") 'helm-M-x)
 (global-set-key (kbd "M-y") 'helm-show-kill-ring)
+(global-set-key (kbd "C-x e") 'eval-buffer)
 (global-set-key (kbd "C-x b") 'helm-mini)
 (global-set-key (kbd "C-x C-f") 'helm-find-files)
 (global-set-key (kbd "C-c h o") 'helm-occur)
 (global-set-key (kbd "C-c h x") 'helm-register)
+
+(with-eval-after-load 'evil-maps
+    (define-key evil-insert-state-map (kbd "C-c") 'evil-normal-state)
+    (define-key evil-motion-state-map (kbd "SPC") nil)
+    (define-key evil-motion-state-map (kbd ",") nil)
+    (define-key evil-motion-state-map (kbd "SPC e") 'eval-buffer)
+    (define-key evil-motion-state-map (kbd "SPC SPC") 'execute-extended-command)
+    (define-key evil-motion-state-map (kbd "SPC b") 'helm-mini))
