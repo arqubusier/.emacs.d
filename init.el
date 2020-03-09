@@ -45,3 +45,20 @@ There are two things you can do about this warning:
     (define-key evil-motion-state-map (kbd "SPC e") 'eval-buffer)
     (define-key evil-motion-state-map (kbd "SPC SPC") 'execute-extended-command)
     (define-key evil-motion-state-map (kbd "SPC b") 'helm-mini))
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages
+   (quote
+    (fill-column-indicator yasnippet volatile-highlights helm-gtags evil company clojure-mode))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
+
+(require 'fill-column-indicator)
+(setq fci-rule-column 120)
