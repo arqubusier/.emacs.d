@@ -45,7 +45,7 @@ There are two things you can do about this warning:
     (define-key evil-motion-state-map (kbd "SPC e") 'eval-buffer)
     (define-key evil-motion-state-map (kbd "SPC SPC") 'execute-extended-command)
     (define-key evil-motion-state-map (kbd "SPC b") 'helm-mini))
-    (define-key projectile-mode-map (kbd "SPC p") 'projectile-command-map)
+    ;;(define-key projectile-mode-map (kbd "SPC p") 'projectile-command-map)
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
