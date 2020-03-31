@@ -15,6 +15,22 @@ There are two things you can do about this warning:
   )
 (package-initialize)
 
+;
+; C/C++
+;
+(setq-default indent-tabs-mode nil)
+(custom-set-variables
+ '(c-basic-offset 2))
+
+(defconst helu-style
+  '("k&r"
+    (c-basic-offset 2)
+    (c-offsets-alist . ((innamespace . [0])))))
+
+(c-add-style "helu" helu-style)
+(setq c-default-style "helu")
+
+
 (add-to-list 'load-path "~/.emacs.d/evil")
 (require 'evil)
 (evil-mode 1)
