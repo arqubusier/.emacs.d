@@ -23,8 +23,7 @@ There are two things you can do about this warning:
  '(c-basic-offset 2))
 
 (defconst helu-style
-  '("k&r"
-    (c-basic-offset 2)
+  '("gnu"
     (c-offsets-alist . ((innamespace . [0])))))
 
 (c-add-style "helu" helu-style)
