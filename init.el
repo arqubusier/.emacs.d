@@ -107,3 +107,8 @@ There are two things you can do about this warning:
           (function (lambda ()
                     (add-hook 'before-save-hook
                               'clang-format-buffer))))
+
+;;
+;; Line numbers
+;;
+(global-display-line-numbers-mode)
