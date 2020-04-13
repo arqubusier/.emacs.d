@@ -27,7 +27,7 @@ There are two things you can do about this warning:
  '(c-basic-offset 2)
  '(package-selected-packages
    (quote
-    (clang-format helm-projectile zzz-to-char projectile fill-column-indicator yasnippet volatile-highlights helm-gtags evil company clojure-mode))))
+    (magit clang-format helm-projectile zzz-to-char projectile fill-column-indicator yasnippet volatile-highlights helm-gtags evil company clojure-mode))))
 
 (defconst helu-style
   '("gnu"
@@ -49,7 +49,7 @@ There are two things you can do about this warning:
 
 (require 'helm-config)
 (helm-mode 1)
-(semantic-mode 1)
+;(semantic-mode 1)
 
 (setq helm-autoresize-max-height 0)
 (setq helm-autoresize-min-height 20)
@@ -68,13 +68,23 @@ There are two things you can do about this warning:
 
 (with-eval-after-load 'evil-maps
     (define-key evil-insert-state-map (kbd "C-c") 'evil-normal-state)
+    (define-key evil-insert-state-map (kbd "C-,") 'company-complete)
     (define-key evil-motion-state-map (kbd "SPC") nil)
     (define-key evil-motion-state-map (kbd ",") nil)
     (define-key evil-motion-state-map (kbd "SPC e") 'eval-buffer)
     (define-key evil-motion-state-map (kbd "SPC SPC") 'execute-extended-command)
-    (define-key evil-motion-state-map (kbd "SPC b") 'helm-mini))
+    ; helm
+    (define-key evil-motion-state-map (kbd "SPC b") 'helm-mini)
+    ; projectile
     (define-key evil-motion-state-map (kbd "SPC p") 'projectile-command-map)
-
+    ; helm gtags
+    (define-key evil-motion-state-map (kbd "SPC g C") 'helm-gtags-create-tags)
+    (define-key evil-motion-state-map (kbd "SPC g t") 'helm-gtags-find-tag)
+    (define-key evil-motion-state-map (kbd "SPC g r") 'helm-gtags-find-rtag)
+    (define-key evil-motion-state-map (kbd "SPC g s") 'helm-gtags-find-symbol)
+)
+;(define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
+;(define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -90,8 +100,7 @@ There are two things you can do about this warning:
 ;; Projectile
 ;;
 (require 'projectile)
-(define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
-(define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
+(global-set-key (kbd "C-x p") 'projectile-command-map)
 (projectile-mode +1)
 
 ;;
@@ -112,3 +121,17 @@ There are two things you can do about this warning:
 ;; Line numbers
 ;;
 (global-display-line-numbers-mode)
+
+;;
+;; Company
+;;
+(add-hook 'after-init-hook 'global-company-mode)
+
+
+;; Helm-gtags
+(add-hook 'c-mode-hook 'helm-gtags-mode)
+(add-hook 'c++-mode-hook 'helm-gtags-mode)
+(custom-set-variables
+ '(helm-gtags-path-style 'relative)
+ '(helm-gtags-ignore-case t)
+ '(helm-gtags-auto-update t))
