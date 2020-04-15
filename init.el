@@ -82,6 +82,8 @@ There are two things you can do about this warning:
     (define-key evil-motion-state-map (kbd "SPC g t") 'helm-gtags-find-tag)
     (define-key evil-motion-state-map (kbd "SPC g r") 'helm-gtags-find-rtag)
     (define-key evil-motion-state-map (kbd "SPC g s") 'helm-gtags-find-symbol)
+    ; magit
+    (define-key evil-motion-state-map (kbd "SPC v") 'magit-status)
 )
 ;(define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
 ;(define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
