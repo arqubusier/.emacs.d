@@ -25,9 +25,12 @@ There are two things you can do about this warning:
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(c-basic-offset 2)
+ '(helm-gtags-auto-update t)
+ '(helm-gtags-ignore-case t)
+ '(helm-gtags-path-style (quote relative))
  '(package-selected-packages
    (quote
-    (magit clang-format helm-projectile zzz-to-char projectile fill-column-indicator yasnippet volatile-highlights helm-gtags evil company clojure-mode))))
+    (helm-xref lsp-mode magit clang-format helm-projectile zzz-to-char projectile fill-column-indicator yasnippet volatile-highlights helm-gtags evil company clojure-mode))))
 
 (defconst helu-style
   '("gnu"
@@ -84,6 +87,9 @@ There are two things you can do about this warning:
     (define-key evil-motion-state-map (kbd "SPC g s") 'helm-gtags-find-symbol)
     ; magit
     (define-key evil-motion-state-map (kbd "SPC v") 'magit-status)
+    ; lsp
+    (define-key evil-motion-state-map (kbd "SPC d") 'lsp-find-definition)
+    (define-key evil-motion-state-map (kbd "SPC r") 'lsp-find-references)
 )
 ;(define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
 ;(define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
@@ -110,6 +116,8 @@ There are two things you can do about this warning:
 ;;
 (require 'helm-projectile)
 (helm-projectile-on)
+;; helm-xref
+(require 'helm-xref)
 
 ;;
 ;; Clang format
@@ -133,7 +141,23 @@ There are two things you can do about this warning:
 ;; Helm-gtags
 (add-hook 'c-mode-hook 'helm-gtags-mode)
 (add-hook 'c++-mode-hook 'helm-gtags-mode)
-(custom-set-variables
- '(helm-gtags-path-style 'relative)
- '(helm-gtags-ignore-case t)
- '(helm-gtags-auto-update t))
+
+
+;; lsp
+(require 'lsp-mode)
+  :config
+    ;; `-background-index' requires clangd v8+!
+  (setq lsp-clients-clangd-args '("-j=4" "-background-index" "-log=error"))
+  (add-hook 'c++-mode-hook #'lsp)
+  (add-hook 'python-mode-hook #'lsp)
+  (add-hook 'rust-mode-hook #'lsp)
+
+;; Company lsp
+(require 'company-lsp)
+  :config
+  (push 'company-lsp company-backends)
+
+   ;; Disable client-side cache because the LSP server does a better job.
+  (setq company-transformers nil
+        company-lsp-async t
+        company-lsp-cache-candidates nil)
