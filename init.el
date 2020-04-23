@@ -30,7 +30,7 @@ There are two things you can do about this warning:
  '(helm-gtags-path-style (quote relative))
  '(package-selected-packages
    (quote
-    (helm-xref lsp-mode magit clang-format helm-projectile zzz-to-char projectile fill-column-indicator yasnippet volatile-highlights helm-gtags evil company clojure-mode))))
+    (helm-lsp helm-xref lsp-mode magit clang-format helm-projectile zzz-to-char projectile fill-column-indicator yasnippet volatile-highlights helm-gtags evil company clojure-mode))))
 
 (defconst helu-style
   '("gnu"
@@ -118,6 +118,7 @@ There are two things you can do about this warning:
 (helm-projectile-on)
 ;; helm-xref
 (require 'helm-xref)
+(require 'helm-lsp)
 
 ;;
 ;; Clang format
