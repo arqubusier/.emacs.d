@@ -30,7 +30,7 @@ There are two things you can do about this warning:
  '(helm-gtags-path-style (quote relative))
  '(package-selected-packages
    (quote
-    (helm-lsp helm-xref lsp-mode magit clang-format helm-projectile zzz-to-char projectile fill-column-indicator yasnippet volatile-highlights helm-gtags evil company clojure-mode))))
+    (flycheck lsp-ui helm-lsp helm-xref lsp-mode magit clang-format helm-projectile zzz-to-char projectile fill-column-indicator yasnippet volatile-highlights helm-gtags evil company clojure-mode))))
 
 (defconst helu-style
   '("gnu"
@@ -170,3 +170,8 @@ There are two things you can do about this warning:
   (setq company-transformers nil
         company-lsp-async t
         company-lsp-cache-candidates nil)
+
+;; flycheck
+(require 'flycheck)
+(add-hook 'after-init-hook #'global-flycheck-mode)
+
