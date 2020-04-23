@@ -143,11 +143,19 @@ There are two things you can do about this warning:
 (add-hook 'c++-mode-hook 'helm-gtags-mode)
 
 
+;; TODO
+;; use clangd-9 only on ubuntu 18.04
+;; Distributor ID:	Ubuntu
+;; Description:	Ubuntu 18.04.4 LTS
+;; Release:	18.04
+;; Codename:	bionic
+
 ;; lsp
 (require 'lsp-mode)
   :config
     ;; `-background-index' requires clangd v8+!
   (setq lsp-clients-clangd-args '("-j=4" "-background-index" "-log=error"))
+  (setq lsp-clients-clangd-executable "/usr/bin/clangd-9")
   (add-hook 'c++-mode-hook #'lsp)
   (add-hook 'python-mode-hook #'lsp)
   (add-hook 'rust-mode-hook #'lsp)
