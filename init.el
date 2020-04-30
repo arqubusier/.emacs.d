@@ -90,6 +90,7 @@ There are two things you can do about this warning:
     ; lsp
     (define-key evil-motion-state-map (kbd "SPC d") 'lsp-find-definition)
     (define-key evil-motion-state-map (kbd "SPC r") 'lsp-find-references)
+    (define-key evil-motion-state-map (kbd "SPC s") 'xref-find-apropos)
 )
 ;(define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
 ;(define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
@@ -123,10 +124,10 @@ There are two things you can do about this warning:
 ;;
 ;; Clang format
 ;;
-(add-hook 'c-mode-common-hook
-          (function (lambda ()
-                    (add-hook 'before-save-hook
-                              'clang-format-buffer))))
+(add-hook 'c-common-mode-hook 
+  (lambda ()
+    (add-hook (make-local-variable 'before-save-hook)
+              'clang-format-buffer)))
 
 ;;
 ;; Line numbers
