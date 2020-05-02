@@ -124,6 +124,7 @@ There are two things you can do about this warning:
 ;;
 ;; Clang format
 ;;
+(require 'clang-format)
 (add-hook 'c-common-mode-hook 
   (lambda ()
     (add-hook (make-local-variable 'before-save-hook)
