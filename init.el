@@ -158,7 +158,9 @@ There are two things you can do about this warning:
   :config
     ;; `-background-index' requires clangd v8+!
   (setq lsp-clients-clangd-args '("-j=4" "-background-index" "-log=error"))
-  (setq lsp-clients-clangd-executable "/usr/bin/clangd-9")
+(setq lsp-clients-clangd-executable (if (file-exists-p "/usr/bin/clangd-9")
+                                        "/usr/bin/clangd-9"
+                                      "/usr/bin/clangd"))
   (add-hook 'c++-mode-hook #'lsp)
   (add-hook 'python-mode-hook #'lsp)
   (add-hook 'rust-mode-hook #'lsp)
