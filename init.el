@@ -58,6 +58,9 @@ There are two things you can do about this warning:
 (setq helm-autoresize-min-height 20)
 (helm-autoresize-mode 1)
 
+; bindings and functions
+(defun arm-gdb () "Run arm-none-eabi-gdb." (interactive (gdb "arm-none-eabi-gdb -i=mi")))
+
 (global-set-key (kbd "C-c h") 'helm-command-prefix)
 (global-unset-key (kbd "C-x c"))
 
