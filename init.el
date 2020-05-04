@@ -15,6 +15,8 @@ There are two things you can do about this warning:
   )
 (package-initialize)
 
+(setq-default word-wrap t)
+
 ;
 ; C/C++
 ;
