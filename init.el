@@ -15,6 +15,13 @@ There are two things you can do about this warning:
   )
 (package-initialize)
 
+;; Clang format
+(defun format-and-save()
+  "Format current buffer using clang-format, then save."
+  (interactive)
+  (clang-format-buffer)
+  (save-buffer))
+
 ;
 ; C/C++
 ;
@@ -84,16 +91,18 @@ There are two things you can do about this warning:
     ; projectile
     (define-key evil-motion-state-map (kbd "SPC p") 'projectile-command-map)
     ; helm gtags
-    (define-key evil-motion-state-map (kbd "SPC g C") 'helm-gtags-create-tags)
-    (define-key evil-motion-state-map (kbd "SPC g t") 'helm-gtags-find-tag)
-    (define-key evil-motion-state-map (kbd "SPC g r") 'helm-gtags-find-rtag)
-    (define-key evil-motion-state-map (kbd "SPC g s") 'helm-gtags-find-symbol)
+    ; (define-key evil-motion-state-map (kbd "SPC g C") 'helm-gtags-create-tags)
+    ; (define-key evil-motion-state-map (kbd "SPC g t") 'helm-gtags-find-tag)
+    ; (define-key evil-motion-state-map (kbd "SPC g r") 'helm-gtags-find-rtag)
+    ; (define-key evil-motion-state-map (kbd "SPC g s") 'helm-gtags-find-symbol)
     ; magit
     (define-key evil-motion-state-map (kbd "SPC v") 'magit-status)
     ; lsp
     (define-key evil-motion-state-map (kbd "SPC d") 'lsp-find-definition)
     (define-key evil-motion-state-map (kbd "SPC r") 'lsp-find-references)
-    (define-key evil-motion-state-map (kbd "SPC s") 'xref-find-apropos)
+    (define-key evil-motion-state-map (kbd "SPC x") 'xref-find-apropos)
+    (define-key evil-motion-state-map (kbd "SPC s") 'save-buffer)
+    (define-key evil-motion-state-map (kbd "SPC c") 'format-and-save)
 )
 ;(define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
 ;(define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
@@ -125,15 +134,6 @@ There are two things you can do about this warning:
 (require 'helm-lsp)
 
 ;;
-;; Clang format
-;;
-(require 'clang-format)
-(add-hook 'c-common-mode-hook 
-  (lambda ()
-    (add-hook (make-local-variable 'before-save-hook)
-              'clang-format-buffer)))
-
-;;
 ;; Line numbers
 ;;
 (global-display-line-numbers-mode)
@@ -145,16 +145,9 @@ There are two things you can do about this warning:
 
 
 ;; Helm-gtags
-(add-hook 'c-mode-hook 'helm-gtags-mode)
-(add-hook 'c++-mode-hook 'helm-gtags-mode)
+;(add-hook 'c-mode-hook 'helm-gtags-mode)
+;(add-hook 'c++-mode-hook 'helm-gtags-mode)
 
-
-;; TODO
-;; use clangd-9 only on ubuntu 18.04
-;; Distributor ID:	Ubuntu
-;; Description:	Ubuntu 18.04.4 LTS
-;; Release:	18.04
-;; Codename:	bionic
 
 ;; lsp
 (require 'lsp-mode)
