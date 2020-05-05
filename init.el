@@ -15,12 +15,15 @@ There are two things you can do about this warning:
   )
 (package-initialize)
 
+(setq-default word-wrap t)
+
 ;; Clang format
 (defun format-and-save()
   "Format current buffer using clang-format, then save."
   (interactive)
   (clang-format-buffer)
   (save-buffer))
+
 
 ;
 ; C/C++
