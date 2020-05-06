@@ -24,6 +24,15 @@ There are two things you can do about this warning:
   (clang-format-buffer)
   (save-buffer))
 
+; Compilation
+(add-to-list 'compilation-error-regexp-alist 'build-helper-error)
+;(add-to-list 'compilation-error-regexp-alist 'build-helper-warning)
+
+(add-to-list 'compilation-error-regexp-alist-alist
+         '(build-helper "\\([^ ]+\\):\\([0-9]+\\):\\([0-9]+\\): error:" 1 2 3))
+(add-to-list 'compilation-error-regexp-alist-alist
+         '(build-helper "\\([^ ]+\\):\\([0-9]+\\):\\([0-9]+\\): warning:" 1 2 3))
+
 
 ;
 ; C/C++
@@ -89,6 +98,8 @@ There are two things you can do about this warning:
     (define-key evil-motion-state-map (kbd ",") nil)
     (define-key evil-motion-state-map (kbd "SPC e") 'eval-buffer)
     (define-key evil-motion-state-map (kbd "SPC SPC") 'execute-extended-command)
+
+    (define-key evil-motion-state-map (kbd "SPC a") 'compile)
     ; helm
     (define-key evil-motion-state-map (kbd "SPC b") 'helm-mini)
     ; projectile
@@ -106,6 +117,7 @@ There are two things you can do about this warning:
     (define-key evil-motion-state-map (kbd "SPC x") 'xref-find-apropos)
     (define-key evil-motion-state-map (kbd "SPC s") 'save-buffer)
     (define-key evil-motion-state-map (kbd "SPC c") 'format-and-save)
+    (define-key evil-motion-state-map (kbd "SPC g") 'magit-file-dispatch)
 )
 ;(define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
 ;(define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
