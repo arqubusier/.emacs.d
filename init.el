@@ -26,12 +26,15 @@ There are two things you can do about this warning:
 
 ; Compilation
 (add-to-list 'compilation-error-regexp-alist 'build-helper-error)
-;(add-to-list 'compilation-error-regexp-alist 'build-helper-warning)
+(add-to-list 'compilation-error-regexp-alist 'build-helper-warning)
+(add-to-list 'compilation-error-regexp-alist 'build-helper-info)
 
 (add-to-list 'compilation-error-regexp-alist-alist
-         '(build-helper-error "\\([^ ]+\\):\\([0-9]+\\):\\([0-9]+\\): error:" 1 2 3))
+         '(build-helper-error "\\([^ ]+\\):\\([0-9]+\\):\\([0-9]+\\): error:" 1 2 3 2))
 (add-to-list 'compilation-error-regexp-alist-alist
-         '(build-helper-warning "\\([^ ]+\\):\\([0-9]+\\):\\([0-9]+\\): warning:" 1 2 3))
+         '(build-helper-warning "\\([^ ]+\\):\\([0-9]+\\):\\([0-9]+\\): warning:" 1 2 3 1))
+(add-to-list 'compilation-error-regexp-alist-alist
+         '(build-helper-info "\\([^ ]+\\):\\([0-9]+\\):\\([0-9]+\\):\\( +\\)required" 1 2 3 0))
 
 
 ;
