@@ -24,17 +24,12 @@ There are two things you can do about this warning:
   (clang-format-buffer)
   (save-buffer))
 
-; Compilation
-(add-to-list 'compilation-error-regexp-alist 'build-helper-error)
-(add-to-list 'compilation-error-regexp-alist 'build-helper-warning)
-(add-to-list 'compilation-error-regexp-alist 'build-helper-info)
-
-(add-to-list 'compilation-error-regexp-alist-alist
-         '(build-helper-error "\\([^ ]+\\):\\([0-9]+\\):\\([0-9]+\\): error:" 1 2 3 2))
-(add-to-list 'compilation-error-regexp-alist-alist
-         '(build-helper-warning "\\([^ ]+\\):\\([0-9]+\\):\\([0-9]+\\): warning:" 1 2 3 1))
-(add-to-list 'compilation-error-regexp-alist-alist
-         '(build-helper-info "\\([^ ]+\\):\\([0-9]+\\):\\([0-9]+\\):\\( +\\)required" 1 2 3 0))
+;; Compilation
+; only move between errors.
+(setq compilation-skip-threshold 2)
+;(add-to-list 'compilation-error-regexp-alist 'build-helper-error0)
+;(add-to-list 'compilation-error-regexp-alist-alist
+;         '(build-helper-error0 "\\([^ ]+\\):\\([0-9]+\\):\\([0-9]+\\): error:" 1 2 3 2))
 
 
 ;
@@ -99,28 +94,21 @@ There are two things you can do about this warning:
     (define-key evil-insert-state-map (kbd "C-,") 'company-complete)
     (define-key evil-motion-state-map (kbd "SPC") nil)
     (define-key evil-motion-state-map (kbd ",") nil)
-    (define-key evil-motion-state-map (kbd "SPC e") 'eval-buffer)
     (define-key evil-motion-state-map (kbd "SPC SPC") 'execute-extended-command)
 
     (define-key evil-motion-state-map (kbd "SPC a") 'compile)
-    ; helm
     (define-key evil-motion-state-map (kbd "SPC b") 'helm-mini)
-    ; projectile
-    (define-key evil-motion-state-map (kbd "SPC p") 'projectile-command-map)
-    ; helm gtags
-    ; (define-key evil-motion-state-map (kbd "SPC g C") 'helm-gtags-create-tags)
-    ; (define-key evil-motion-state-map (kbd "SPC g t") 'helm-gtags-find-tag)
-    ; (define-key evil-motion-state-map (kbd "SPC g r") 'helm-gtags-find-rtag)
-    ; (define-key evil-motion-state-map (kbd "SPC g s") 'helm-gtags-find-symbol)
-    ; magit
-    (define-key evil-motion-state-map (kbd "SPC v") 'magit-status)
-    ; lsp
-    (define-key evil-motion-state-map (kbd "SPC d") 'lsp-find-definition)
-    (define-key evil-motion-state-map (kbd "SPC r") 'lsp-find-references)
-    (define-key evil-motion-state-map (kbd "SPC x") 'xref-find-apropos)
-    (define-key evil-motion-state-map (kbd "SPC s") 'save-buffer)
     (define-key evil-motion-state-map (kbd "SPC c") 'format-and-save)
+    (define-key evil-motion-state-map (kbd "SPC d") 'lsp-find-definition)
+    (define-key evil-motion-state-map (kbd "SPC e") 'eval-buffer)
+    (define-key evil-motion-state-map (kbd "SPC f") 'next-error)
     (define-key evil-motion-state-map (kbd "SPC g") 'magit-file-dispatch)
+    (define-key evil-motion-state-map (kbd "SPC p") 'projectile-command-map)
+    (define-key evil-motion-state-map (kbd "SPC q") 'magit-blame-quit)
+    (define-key evil-motion-state-map (kbd "SPC r") 'lsp-find-references)
+    (define-key evil-motion-state-map (kbd "SPC s") 'save-buffer)
+    (define-key evil-motion-state-map (kbd "SPC v") 'magit-status)
+    (define-key evil-motion-state-map (kbd "SPC x") 'xref-find-apropos)
 )
 ;(define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
 ;(define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
