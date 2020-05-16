@@ -59,6 +59,9 @@ There are two things you can do about this warning:
 ;
 ; Org Mode
 ;
+(defun org-config () ((make-local-variable 'evil-auto-indent) (setq evil-auto-indent nil)))
+(add-hook 'org-mode-hook 'org-config)
+
 (setq org-todo-keywords
       '((sequence "TODO" "REVIEW" "|" "DONE")))
 
