@@ -47,7 +47,10 @@ There are two things you can do about this warning:
  '(helm-gtags-path-style (quote relative))
  '(package-selected-packages
    (quote
-    (flycheck lsp-ui helm-lsp helm-xref lsp-mode magit clang-format helm-projectile zzz-to-char projectile fill-column-indicator yasnippet volatile-highlights helm-gtags evil company clojure-mode))))
+    (flycheck lsp-ui helm-lsp helm-xref lsp-mode magit clang-format helm-projectile zzz-to-char projectile fill-column-indicator yasnippet volatile-highlights helm-gtags evil company clojure-mode)))
+ '(safe-local-variable-values
+   (quote
+    ((gud-gdb-command-name . "/home/vsarchelu/amsr-mono/adaptive-microsar/builds/native/amsr-vector-fs-libvac/test/gtest_libvac_test")))))
 
 (defconst helu-style
   '("gnu"
@@ -59,13 +62,20 @@ There are two things you can do about this warning:
 ;
 ; Org Mode
 ;
-(defun org-config () ((make-local-variable 'evil-auto-indent) (setq evil-auto-indent nil)))
-(add-hook 'org-mode-hook 'org-config)
+;(defun org-config () ((make-local-variable 'evil-auto-indent) (setq evil-auto-indent nil)))
+;(remove-hook 'org-mode-hook 'org-config)
 
 (setq org-todo-keywords
       '((sequence "TODO" "REVIEW" "|" "DONE")))
 
-
+(setq org-capture-templates
+      '(("t" "Todo" entry (file+headline "~/notes/todo.org" "Tasks")
+         "* TODO %?\n  %i\n  %a")
+        ("j" "Job" entry (file+datetree "~/notes/job.org" "Tasks")
+         "* TODO %?\n  %i\n  %a")))
+;
+; Evil
+;
 (add-to-list 'load-path "~/.emacs.d/evil")
 (require 'evil)
 (evil-mode 1)
@@ -80,6 +90,7 @@ There are two things you can do about this warning:
 
 ; bindings and functions
 (defun arm-gdb () "Run arm-none-eabi-gdb." (interactive (gdb "arm-none-eabi-gdb -i=mi")))
+(defun gdb-custom () "Run gdb with 'gdb-args'." (interactive (gdb (compile-command))))
 
 (global-set-key (kbd "C-c h") 'helm-command-prefix)
 (global-unset-key (kbd "C-x c"))
