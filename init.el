@@ -17,6 +17,10 @@ There are two things you can do about this warning:
 
 (setq-default word-wrap t)
 
+;; Gui elements
+(menu-bar-mode -1)
+(tool-bar-mode -1)
+
 ;; Which function
 (which-function-mode)
 (setq which-func-unknown "n/a")
