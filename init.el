@@ -17,6 +17,22 @@ There are two things you can do about this warning:
 
 (setq-default word-wrap t)
 
+;; Which function
+(which-function-mode)
+(setq which-func-unknown "n/a")
+;; Show the current function name in the header line
+(setq-default header-line-format
+              '((which-func-mode ("" which-func-format " "))))
+(setq mode-line-misc-info
+            ;; We remove Which Function Mode from the mode line, because it's mostly
+            ;; invisible here anyway.
+            (assq-delete-all 'which-func-mode mode-line-misc-info))
+
+
+;; Solarized
+(load-theme 'solarized-light t)
+;(load-theme 'solarized-dark t)
+
 ;; Clang format
 (defun format-and-save()
   "Format current buffer using clang-format, then save."
@@ -47,7 +63,7 @@ There are two things you can do about this warning:
  '(helm-gtags-path-style (quote relative))
  '(package-selected-packages
    (quote
-    (flycheck lsp-ui helm-lsp helm-xref lsp-mode magit clang-format helm-projectile zzz-to-char projectile fill-column-indicator yasnippet volatile-highlights helm-gtags evil company clojure-mode)))
+    (solarized-theme flycheck lsp-ui helm-lsp helm-xref lsp-mode magit clang-format helm-projectile zzz-to-char projectile fill-column-indicator yasnippet volatile-highlights helm-gtags evil company clojure-mode)))
  '(safe-local-variable-values
    (quote
     ((gud-gdb-command-name . "/home/vsarchelu/amsr-mono/adaptive-microsar/builds/native/amsr-vector-fs-libvac/test/gtest_libvac_test")))))
@@ -122,6 +138,7 @@ There are two things you can do about this warning:
     (define-key evil-motion-state-map (kbd "SPC m RET") 'smerge-keep-current)
     (define-key evil-motion-state-map (kbd "SPC m m") 'smerge-keep-mine)
     (define-key evil-motion-state-map (kbd "SPC m o") 'smerge-keep-other)
+    (define-key evil-motion-state-map (kbd "SPC o") 'org-capture)
     (define-key evil-motion-state-map (kbd "SPC p") 'projectile-command-map)
     (define-key evil-motion-state-map (kbd "SPC q") 'magit-blame-quit)
     (define-key evil-motion-state-map (kbd "SPC r") 'lsp-find-references)
