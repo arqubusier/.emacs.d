@@ -62,6 +62,9 @@ There are two things you can do about this warning:
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(c-basic-offset 2)
+ '(custom-safe-themes
+   (quote
+    ("00445e6f15d31e9afaa23ed0d765850e9cd5e929be5e8e63b114a3346236c44c" "830877f4aab227556548dc0a28bf395d0abe0e3a0ab95455731c9ea5ab5fe4e1" "2809bcb77ad21312897b541134981282dc455ccd7c14d74cc333b6e549b824f3" "7f1d414afda803f3244c6fb4c2c64bea44dac040ed3731ec9d75275b9e831fe5" default)))
  '(helm-gtags-auto-update t)
  '(helm-gtags-ignore-case t)
  '(helm-gtags-path-style (quote relative))
@@ -90,9 +93,9 @@ There are two things you can do about this warning:
 
 (setq org-capture-templates
       '(("t" "Todo" entry (file+headline "~/notes/todo.org" "Tasks")
-         "* TODO %?\n  %i\n  %a")
-        ("j" "Job" entry (file+datetree "~/notes/job.org" "Tasks")
-         "* TODO %?\n  %i\n  %a")))
+         "* TODO %?\n  \n")
+        ("j" "Job" entry (file+headline "~/notes/job.org" "Tasks")
+         "* TODO %?\n  \n")))
 ;
 ; Evil
 ;
