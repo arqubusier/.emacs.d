@@ -151,6 +151,7 @@ There are two things you can do about this warning:
     (define-key evil-motion-state-map (kbd "SPC r") 'lsp-find-references)
     (define-key evil-motion-state-map (kbd "SPC s") 'save-buffer)
     (define-key evil-motion-state-map (kbd "SPC v") 'magit-status)
+    (define-key evil-motion-state-map (kbd "SPC w") 'other-window)
     (define-key evil-motion-state-map (kbd "SPC x") 'xref-find-apropos)
 )
 ;(define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
