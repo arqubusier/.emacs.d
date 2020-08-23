@@ -224,3 +224,25 @@ There are two things you can do about this warning:
 (require 'flycheck)
 (add-hook 'after-init-hook #'global-flycheck-mode)
 
+
+;; org2anki
+(defun print-headings ()
+  "print all headings in current buffer (of org mode).
+2019-01-14"
+  (interactive)
+  (with-output-to-temp-buffer "*xah temp out*"
+    (org-element-map (org-element-parse-buffer) 'paragraph
+      (lambda (x)
+        (princ (org-element-interpret-data x))
+        (terpri )))))
+
+        ;(princ (org-element-property :raw x))
+
+(defun org-test ()
+  "print all headings in current buffer (of org mode).
+2019-01-14"
+  (interactive)
+  (with-output-to-temp-buffer "*xah temp out*"
+    (org-element-parse-buffer)
+  )
+)
