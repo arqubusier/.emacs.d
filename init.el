@@ -17,6 +17,15 @@ There are two things you can do about this warning:
 
 (setq-default word-wrap t)
 
+                                        ;
+;; Save session
+(desktop-save-mode 1)
+(savehist-mode 1)
+
+;; Copy paste
+(setq x-select-enable-primary t)
+(setq x-select-enable-clipboard t)
+
 ;; Gui elements
 (menu-bar-mode -1)
 (tool-bar-mode -1)
@@ -126,6 +135,10 @@ There are two things you can do about this warning:
 (global-set-key (kbd "C-c h o") 'helm-occur)
 (global-set-key (kbd "C-c h x") 'helm-register)
 
+(defun myprevious-window ()
+    (interactive)
+    (other-window -1))
+
 (with-eval-after-load 'evil-maps
     (define-key evil-insert-state-map (kbd "C-c") 'evil-normal-state)
     (define-key evil-insert-state-map (kbd "C-,") 'company-complete)
@@ -140,6 +153,8 @@ There are two things you can do about this warning:
     (define-key evil-motion-state-map (kbd "SPC e") 'eval-buffer)
     (define-key evil-motion-state-map (kbd "SPC f") 'next-error)
     (define-key evil-motion-state-map (kbd "SPC g") 'magit-file-dispatch)
+    (define-key evil-motion-state-map (kbd "SPC j") 'other-window)
+    (define-key evil-motion-state-map (kbd "SPC k") 'myprevious-window)
     (define-key evil-motion-state-map (kbd "SPC m n") 'smerge-next)
     (define-key evil-motion-state-map (kbd "SPC m p") 'smerge-previous)
     (define-key evil-motion-state-map (kbd "SPC m RET") 'smerge-keep-current)
@@ -151,7 +166,6 @@ There are two things you can do about this warning:
     (define-key evil-motion-state-map (kbd "SPC r") 'lsp-find-references)
     (define-key evil-motion-state-map (kbd "SPC s") 'save-buffer)
     (define-key evil-motion-state-map (kbd "SPC v") 'magit-status)
-    (define-key evil-motion-state-map (kbd "SPC w") 'other-window)
     (define-key evil-motion-state-map (kbd "SPC x") 'xref-find-apropos)
 )
 ;(define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
