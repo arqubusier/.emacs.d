@@ -17,6 +17,16 @@ There are two things you can do about this warning:
 
 (setq-default word-wrap t)
 
+;; Spelling
+
+(dolist (hook '(lisp-mode-hook
+                emacs-lisp-mode-hook
+                c-mode-common-hook
+                python-mode-hook
+                shell-mode-hook
+                LaTeX-mode-hook))
+  (add-hook hook 'flyspell-prog-mode))
+
                                         ;
 ;; Save session
 (desktop-save-mode 1)
