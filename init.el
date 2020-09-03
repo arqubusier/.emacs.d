@@ -47,7 +47,7 @@ There are two things you can do about this warning:
  '(helm-gtags-path-style (quote relative))
  '(package-selected-packages
    (quote
-    (flycheck lsp-ui helm-lsp helm-xref lsp-mode magit clang-format helm-projectile zzz-to-char projectile fill-column-indicator yasnippet volatile-highlights helm-gtags evil company clojure-mode))))
+    (evil-numbers flycheck lsp-ui helm-lsp helm-xref lsp-mode magit clang-format helm-projectile zzz-to-char projectile fill-column-indicator yasnippet volatile-highlights helm-gtags evil company clojure-mode))))
 
 (defconst helu-style
   '("gnu"
@@ -98,6 +98,9 @@ There are two things you can do about this warning:
     (define-key evil-motion-state-map (kbd "SPC") nil)
     (define-key evil-motion-state-map (kbd ",") nil)
     (define-key evil-motion-state-map (kbd "SPC SPC") 'execute-extended-command)
+
+    (define-key evil-normal-state-map (kbd "C-c +") 'evil-numbers/inc-at-pt)
+    (define-key evil-normal-state-map (kbd "C-c -") 'evil-numbers/dec-at-pt)
 
     (define-key evil-motion-state-map (kbd "SPC a") 'compile)
     (define-key evil-motion-state-map (kbd "SPC b") 'helm-mini)
