@@ -89,7 +89,7 @@ There are two things you can do about this warning:
  '(helm-gtags-path-style (quote relative))
  '(package-selected-packages
    (quote
-    (solarized-theme flycheck lsp-ui helm-lsp helm-xref lsp-mode magit clang-format helm-projectile zzz-to-char projectile fill-column-indicator yasnippet volatile-highlights helm-gtags evil company clojure-mode)))
+    (dap-mode solarized-theme flycheck lsp-ui helm-lsp helm-xref lsp-mode magit clang-format helm-projectile zzz-to-char projectile fill-column-indicator yasnippet volatile-highlights helm-gtags evil company clojure-mode)))
  '(safe-local-variable-values
    (quote
     ((gud-gdb-command-name . "/home/vsarchelu/amsr-mono/adaptive-microsar/builds/native/amsr-vector-fs-libvac/test/gtest_libvac_test")))))
@@ -177,6 +177,7 @@ There are two things you can do about this warning:
     (define-key evil-motion-state-map (kbd "SPC s") 'save-buffer)
     (define-key evil-motion-state-map (kbd "SPC v") 'magit-status)
     (define-key evil-motion-state-map (kbd "SPC x") 'xref-find-apropos)
+    (define-key evil-motion-state-map (kbd "SPC y") 'xah-copy-file-path)
 )
 ;(define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
 ;(define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
@@ -271,3 +272,36 @@ There are two things you can do about this warning:
     (org-element-parse-buffer)
   )
 )
+
+
+;; Copy current buffer path
+(defun xah-copy-file-path (&optional @dir-path-only-p)
+  "Copy the current buffer's file path or dired path to `kill-ring'.
+Result is full path.
+If `universal-argument' is called first, copy only the dir path.
+
+If in dired, copy the file/dir cursor is on, or marked files.
+
+If a buffer is not file and not dired, copy value of `default-directory' (which is usually the “current” dir when that buffer was created)
+
+URL `http://ergoemacs.org/emacs/emacs_copy_file_path.html'
+Version 2017-09-01"
+  (interactive "P")
+  (let (($fpath
+         (if (string-equal major-mode 'dired-mode)
+             (progn
+               (let (($result (mapconcat 'identity (dired-get-marked-files) "\n")))
+                 (if (equal (length $result) 0)
+                     (progn default-directory )
+                   (progn $result))))
+           (if (buffer-file-name)
+               (buffer-file-name)
+             (expand-file-name default-directory)))))
+    (kill-new
+     (if @dir-path-only-p
+         (progn
+           (message "Directory path copied: 「%s」" (file-name-directory $fpath))
+           (file-name-directory $fpath))
+       (progn
+         (message "File path copied: 「%s」" $fpath)
+         $fpath )))))
