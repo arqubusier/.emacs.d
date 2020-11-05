@@ -17,6 +17,7 @@ There are two things you can do about this warning:
 
 (setq-default word-wrap t)
 
+
 ;; Spelling
 
 (dolist (hook '(lisp-mode-hook
@@ -35,6 +36,7 @@ There are two things you can do about this warning:
 ;; Copy paste
 (setq x-select-enable-primary t)
 (setq x-select-enable-clipboard t)
+(setq mouse-yank-at-point t)
 
 ;; Gui elements
 (menu-bar-mode -1)
@@ -53,8 +55,8 @@ There are two things you can do about this warning:
 
 
 ;; Solarized
-(load-theme 'solarized-light t)
-;(load-theme 'solarized-dark t)
+;(load-theme 'solarized-light t)
+(load-theme 'solarized-dark t)
 
 ;; Clang format
 (defun format-and-save()
@@ -83,7 +85,7 @@ There are two things you can do about this warning:
  '(c-basic-offset 2)
  '(custom-safe-themes
    (quote
-    ("00445e6f15d31e9afaa23ed0d765850e9cd5e929be5e8e63b114a3346236c44c" "830877f4aab227556548dc0a28bf395d0abe0e3a0ab95455731c9ea5ab5fe4e1" "2809bcb77ad21312897b541134981282dc455ccd7c14d74cc333b6e549b824f3" "7f1d414afda803f3244c6fb4c2c64bea44dac040ed3731ec9d75275b9e831fe5" default)))
+    ("c433c87bd4b64b8ba9890e8ed64597ea0f8eb0396f4c9a9e01bd20a04d15d358" "285d1bf306091644fb49993341e0ad8bafe57130d9981b680c1dbd974475c5c7" "00445e6f15d31e9afaa23ed0d765850e9cd5e929be5e8e63b114a3346236c44c" "830877f4aab227556548dc0a28bf395d0abe0e3a0ab95455731c9ea5ab5fe4e1" "2809bcb77ad21312897b541134981282dc455ccd7c14d74cc333b6e549b824f3" "7f1d414afda803f3244c6fb4c2c64bea44dac040ed3731ec9d75275b9e831fe5" default)))
  '(helm-gtags-auto-update t)
  '(helm-gtags-ignore-case t)
  '(helm-gtags-path-style (quote relative))
@@ -92,7 +94,9 @@ There are two things you can do about this warning:
     (dap-mode solarized-theme flycheck lsp-ui helm-lsp helm-xref lsp-mode magit clang-format helm-projectile zzz-to-char projectile fill-column-indicator yasnippet volatile-highlights helm-gtags evil company clojure-mode)))
  '(safe-local-variable-values
    (quote
-    ((gud-gdb-command-name . "/home/vsarchelu/amsr-mono/adaptive-microsar/builds/native/amsr-vector-fs-libvac/test/gtest_libvac_test")))))
+    ((reftex-default-bibliography "../bibliography.bib")
+     (TeX-master . "../TechnicalReference_VectorAdaptiveCommonLibrary")
+     (gud-gdb-command-name . "/home/vsarchelu/amsr-mono/adaptive-microsar/builds/native/amsr-vector-fs-libvac/test/gtest_libvac_test")))))
 
 (defconst helu-style
   '("gnu"
@@ -100,6 +104,18 @@ There are two things you can do about this warning:
 
 (c-add-style "helu" helu-style)
 (setq c-default-style "helu")
+
+
+(defun my-c-hook ()
+  (setq fill-column 120))
+
+(defun my-c++-hook ()
+  (setq fill-column 120))
+
+
+(add-hook 'c-mode-hook 'my-c-hook)
+(add-hook 'c++-mode-hook 'my-c++-hook)
+
 
 ;
 ; Org Mode
@@ -114,7 +130,10 @@ There are two things you can do about this warning:
       '(("t" "Todo" entry (file+headline "~/notes/todo.org" "Tasks")
          "* TODO %?\n  \n")
         ("j" "Job" entry (file+headline "~/notes/job.org" "Tasks")
-         "* TODO %?\n  \n")))
+         "* TODO %?\n  \n")
+        ("k" "Job Note" entry (file+headline "~/notes/job-notes.org" "Job Notes")
+                "* %?\n  \n")
+        ))
 ;
 ; Evil
 ;
@@ -245,6 +264,9 @@ There are two things you can do about this warning:
   (setq company-transformers nil
         company-lsp-async t
         company-lsp-cache-candidates nil)
+
+;; (setq lsp-enable-on-type-formatting nil)
+(setq clang-format-style "file")
 
 ;; flycheck
 (require 'flycheck)
