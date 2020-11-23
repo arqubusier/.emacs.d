@@ -42,6 +42,10 @@ There are two things you can do about this warning:
 (menu-bar-mode -1)
 (tool-bar-mode -1)
 
+;; window
+(setq split-height-threshold 84)
+(setq split-width-threshold 240)
+
 ;; Which function
 (which-function-mode)
 (setq which-func-unknown "n/a")
@@ -55,8 +59,8 @@ There are two things you can do about this warning:
 
 
 ;; Solarized
-;(load-theme 'solarized-light t)
-(load-theme 'solarized-dark t)
+(load-theme 'solarized-light t)
+;(load-theme 'solarized-dark t)
 
 ;; Clang format
 (defun format-and-save()
@@ -94,7 +98,8 @@ There are two things you can do about this warning:
     (dap-mode solarized-theme flycheck lsp-ui helm-lsp helm-xref lsp-mode magit clang-format helm-projectile zzz-to-char projectile fill-column-indicator yasnippet volatile-highlights helm-gtags evil company clojure-mode)))
  '(safe-local-variable-values
    (quote
-    ((reftex-default-bibliography "../bibliography.bib")
+    ((TeX-master . "../TechnicalReference_VaCommonLib")
+     (reftex-default-bibliography "../bibliography.bib")
      (TeX-master . "../TechnicalReference_VectorAdaptiveCommonLibrary")
      (gud-gdb-command-name . "/home/vsarchelu/amsr-mono/adaptive-microsar/builds/native/amsr-vector-fs-libvac/test/gtest_libvac_test")))))
 
