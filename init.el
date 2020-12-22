@@ -28,7 +28,11 @@ There are two things you can do about this warning:
                 LaTeX-mode-hook))
   (add-hook hook 'flyspell-prog-mode))
 
-                                        ;
+;; yasnippet
+(yas-reload-all)
+(add-hook 'prog-mode-hook 'yas-minor-mode)
+(add-hook 'c++-mode-hook 'yas-minor-mode)
+
 ;; Save session
 (desktop-save-mode 1)
 (savehist-mode 1)
@@ -95,7 +99,7 @@ There are two things you can do about this warning:
  '(helm-gtags-path-style (quote relative))
  '(package-selected-packages
    (quote
-    (dap-mode solarized-theme flycheck lsp-ui helm-lsp helm-xref lsp-mode magit clang-format helm-projectile zzz-to-char projectile fill-column-indicator yasnippet volatile-highlights helm-gtags evil company clojure-mode)))
+    (yasnippet-lean yasnippet-snippets plantuml-mode rmsbolt dap-mode solarized-theme flycheck lsp-ui helm-lsp helm-xref lsp-mode magit clang-format helm-projectile zzz-to-char projectile fill-column-indicator yasnippet volatile-highlights helm-gtags evil company clojure-mode)))
  '(safe-local-variable-values
    (quote
     ((TeX-master . "../TechnicalReference_VaCommonLib")
@@ -176,6 +180,7 @@ There are two things you can do about this warning:
 (with-eval-after-load 'evil-maps
     (define-key evil-insert-state-map (kbd "C-c") 'evil-normal-state)
     (define-key evil-insert-state-map (kbd "C-,") 'company-complete)
+    (define-key evil-insert-state-map (kbd "C-.") 'yas-expand)
     (define-key evil-motion-state-map (kbd "SPC") nil)
     (define-key evil-motion-state-map (kbd ",") nil)
     (define-key evil-motion-state-map (kbd "SPC SPC") 'execute-extended-command)
@@ -187,13 +192,16 @@ There are two things you can do about this warning:
     (define-key evil-motion-state-map (kbd "SPC e") 'eval-buffer)
     (define-key evil-motion-state-map (kbd "SPC f") 'next-error)
     (define-key evil-motion-state-map (kbd "SPC g") 'magit-file-dispatch)
+    (define-key evil-motion-state-map (kbd "SPC h d") 'hide-ifdef-block)
+    (define-key evil-motion-state-map (kbd "SPC h s") 'show-ifdef-block)
     (define-key evil-motion-state-map (kbd "SPC j") 'other-window)
     (define-key evil-motion-state-map (kbd "SPC k") 'myprevious-window)
     (define-key evil-motion-state-map (kbd "SPC m n") 'smerge-next)
-    (define-key evil-motion-state-map (kbd "SPC m p") 'smerge-previous)
+    (define-key evil-motion-state-map (kbd "SPC m p") 'smerge-prev)
     (define-key evil-motion-state-map (kbd "SPC m RET") 'smerge-keep-current)
-    (define-key evil-motion-state-map (kbd "SPC m m") 'smerge-keep-mine)
-    (define-key evil-motion-state-map (kbd "SPC m o") 'smerge-keep-other)
+    (define-key evil-motion-state-map (kbd "SPC m u") 'smerge-keep-upper)
+    (define-key evil-motion-state-map (kbd "SPC m l") 'smerge-keep-lower)
+    (define-key evil-motion-state-map (kbd "SPC m a") 'smerge-keep-all)
     (define-key evil-motion-state-map (kbd "SPC o") 'org-capture)
     (define-key evil-motion-state-map (kbd "SPC p") 'projectile-command-map)
     (define-key evil-motion-state-map (kbd "SPC q") 'magit-blame-quit)
@@ -246,6 +254,14 @@ There are two things you can do about this warning:
 ;; Helm-gtags
 ;(add-hook 'c-mode-hook 'helm-gtags-mode)
 ;(add-hook 'c++-mode-hook 'helm-gtags-mode)
+
+;; Plantuml
+    (setq plantuml-jar-path "/home/vsarchelu/plantuml.jar")
+    (setq plantuml-default-exec-mode 'jar)
+
+    ;; Sample executable configuration
+    ;;(setq plantuml-executable-path "/path/to/your/copy/of/plantuml.bin")
+    ;;(setq plantuml-default-exec-mode 'executable)
 
 
 ;; lsp
@@ -332,3 +348,4 @@ Version 2017-09-01"
        (progn
          (message "File path copied: 「%s」" $fpath)
          $fpath )))))
+
