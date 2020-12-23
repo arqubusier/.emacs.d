@@ -28,7 +28,8 @@ There are two things you can do about this warning:
                 LaTeX-mode-hook))
   (add-hook hook 'flyspell-prog-mode))
 
-;; yasnippet
+;; yasnippes
+(require 'yasnippet)
 (yas-reload-all)
 (add-hook 'prog-mode-hook 'yas-minor-mode)
 (add-hook 'c++-mode-hook 'yas-minor-mode)
