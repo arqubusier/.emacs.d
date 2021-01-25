@@ -20,6 +20,8 @@ There are two things you can do about this warning:
 
 ;; Spelling
 
+(dolist (hook '(text-mode-hook))
+      (add-hook hook (lambda () (flyspell-mode 1))))
 (dolist (hook '(lisp-mode-hook
                 emacs-lisp-mode-hook
                 c-mode-common-hook
@@ -35,6 +37,7 @@ There are two things you can do about this warning:
 (add-hook 'c++-mode-hook 'yas-minor-mode)
 
 ;; Save session
+(setq desktop-path '("." "~/.emacs.d/" "~"))
 (desktop-save-mode 1)
 (savehist-mode 1)
 
