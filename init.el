@@ -20,8 +20,11 @@ There are two things you can do about this warning:
 
 (setq-default word-wrap t)
 
+
 ;; Spelling
 
+(dolist (hook '(text-mode-hook))
+      (add-hook hook (lambda () (flyspell-mode 1))))
 (dolist (hook '(lisp-mode-hook
                 emacs-lisp-mode-hook
                 c-mode-common-hook
@@ -30,18 +33,29 @@ There are two things you can do about this warning:
                 LaTeX-mode-hook))
   (add-hook hook 'flyspell-prog-mode))
 
-                                        ;
+;; yasnippet
+(require 'yasnippet)
+(yas-reload-all)
+(add-hook 'prog-mode-hook 'yas-minor-mode)
+(add-hook 'c++-mode-hook 'yas-minor-mode)
+
 ;; Save session
+(setq desktop-path '("." "~/.emacs.d/" "~"))
 (desktop-save-mode 1)
 (savehist-mode 1)
 
 ;; Copy paste
 (setq x-select-enable-primary t)
 (setq x-select-enable-clipboard t)
+(setq mouse-yank-at-point t)
 
 ;; Gui elements
 (menu-bar-mode -1)
 (tool-bar-mode -1)
+
+;; window
+(setq split-height-threshold 84)
+(setq split-width-threshold 240)
 
 ;; Which function
 (which-function-mode)
@@ -86,16 +100,19 @@ There are two things you can do about this warning:
  '(c-basic-offset 2)
  '(custom-safe-themes
    (quote
-    ("00445e6f15d31e9afaa23ed0d765850e9cd5e929be5e8e63b114a3346236c44c" "830877f4aab227556548dc0a28bf395d0abe0e3a0ab95455731c9ea5ab5fe4e1" "2809bcb77ad21312897b541134981282dc455ccd7c14d74cc333b6e549b824f3" "7f1d414afda803f3244c6fb4c2c64bea44dac040ed3731ec9d75275b9e831fe5" default)))
+    ("c433c87bd4b64b8ba9890e8ed64597ea0f8eb0396f4c9a9e01bd20a04d15d358" "285d1bf306091644fb49993341e0ad8bafe57130d9981b680c1dbd974475c5c7" "00445e6f15d31e9afaa23ed0d765850e9cd5e929be5e8e63b114a3346236c44c" "830877f4aab227556548dc0a28bf395d0abe0e3a0ab95455731c9ea5ab5fe4e1" "2809bcb77ad21312897b541134981282dc455ccd7c14d74cc333b6e549b824f3" "7f1d414afda803f3244c6fb4c2c64bea44dac040ed3731ec9d75275b9e831fe5" default)))
  '(helm-gtags-auto-update t)
  '(helm-gtags-ignore-case t)
  '(helm-gtags-path-style (quote relative))
  '(package-selected-packages
    (quote
-    (evil-numbers solarized-theme flycheck lsp-ui helm-lsp helm-xref lsp-mode magit clang-format helm-projectile zzz-to-char projectile fill-column-indicator yasnippet volatile-highlights helm-gtags evil company clojure-mode)))
+    (yasnippet-lean yasnippet-snippets plantuml-mode rmsbolt dap-mode evil-numbers solarized-theme flycheck lsp-ui helm-lsp helm-xref lsp-mode magit clang-format helm-projectile zzz-to-char projectile fill-column-indicator yasnippet volatile-highlights helm-gtags evil company clojure-mode)))
  '(safe-local-variable-values
    (quote
-    ((gud-gdb-command-name . "/home/vsarchelu/amsr-mono/adaptive-microsar/builds/native/amsr-vector-fs-libvac/test/gtest_libvac_test")))))
+    ((TeX-master . "../TechnicalReference_VaCommonLib")
+     (reftex-default-bibliography "../bibliography.bib")
+     (TeX-master . "../TechnicalReference_VectorAdaptiveCommonLibrary")
+     (gud-gdb-command-name . "/home/vsarchelu/amsr-mono/adaptive-microsar/builds/native/amsr-vector-fs-libvac/test/gtest_libvac_test")))))
 
 (defconst helu-style
   '("gnu"
@@ -103,6 +120,18 @@ There are two things you can do about this warning:
 
 (c-add-style "helu" helu-style)
 (setq c-default-style "helu")
+
+
+(defun my-c-hook ()
+  (setq fill-column 120))
+
+(defun my-c++-hook ()
+  (setq fill-column 120))
+
+
+(add-hook 'c-mode-hook 'my-c-hook)
+(add-hook 'c++-mode-hook 'my-c++-hook)
+
 
 ;
 ; Org Mode
@@ -117,7 +146,10 @@ There are two things you can do about this warning:
       '(("t" "Todo" entry (file+headline "~/notes/todo.org" "Tasks")
          "* TODO %?\n  \n")
         ("j" "Job" entry (file+headline "~/notes/job.org" "Tasks")
-         "* TODO %?\n  \n")))
+         "* TODO %?\n  \n")
+        ("k" "Job Note" entry (file+headline "~/notes/job-notes.org" "Job Notes")
+                "* %?\n  \n")
+        ))
 ;
 ; Evil
 ;
@@ -155,6 +187,7 @@ There are two things you can do about this warning:
 (with-eval-after-load 'evil-maps
     (define-key evil-insert-state-map (kbd "C-c") 'evil-normal-state)
     (define-key evil-insert-state-map (kbd "C-,") 'company-complete)
+    (define-key evil-insert-state-map (kbd "C-.") 'yas-expand)
     (define-key evil-motion-state-map (kbd "SPC") nil)
     (define-key evil-motion-state-map (kbd ",") nil)
     (define-key evil-motion-state-map (kbd "SPC SPC") 'execute-extended-command)
@@ -169,13 +202,16 @@ There are two things you can do about this warning:
     (define-key evil-motion-state-map (kbd "SPC e") 'eval-buffer)
     (define-key evil-motion-state-map (kbd "SPC f") 'next-error)
     (define-key evil-motion-state-map (kbd "SPC g") 'magit-file-dispatch)
+    (define-key evil-motion-state-map (kbd "SPC h d") 'hide-ifdef-block)
+    (define-key evil-motion-state-map (kbd "SPC h s") 'show-ifdef-block)
     (define-key evil-motion-state-map (kbd "SPC j") 'other-window)
     (define-key evil-motion-state-map (kbd "SPC k") 'myprevious-window)
     (define-key evil-motion-state-map (kbd "SPC m n") 'smerge-next)
-    (define-key evil-motion-state-map (kbd "SPC m p") 'smerge-previous)
+    (define-key evil-motion-state-map (kbd "SPC m p") 'smerge-prev)
     (define-key evil-motion-state-map (kbd "SPC m RET") 'smerge-keep-current)
-    (define-key evil-motion-state-map (kbd "SPC m m") 'smerge-keep-mine)
-    (define-key evil-motion-state-map (kbd "SPC m o") 'smerge-keep-other)
+    (define-key evil-motion-state-map (kbd "SPC m u") 'smerge-keep-upper)
+    (define-key evil-motion-state-map (kbd "SPC m l") 'smerge-keep-lower)
+    (define-key evil-motion-state-map (kbd "SPC m a") 'smerge-keep-all)
     (define-key evil-motion-state-map (kbd "SPC o") 'org-capture)
     (define-key evil-motion-state-map (kbd "SPC p") 'projectile-command-map)
     (define-key evil-motion-state-map (kbd "SPC q") 'magit-blame-quit)
@@ -183,6 +219,7 @@ There are two things you can do about this warning:
     (define-key evil-motion-state-map (kbd "SPC s") 'save-buffer)
     (define-key evil-motion-state-map (kbd "SPC v") 'magit-status)
     (define-key evil-motion-state-map (kbd "SPC x") 'xref-find-apropos)
+    (define-key evil-motion-state-map (kbd "SPC y") 'xah-copy-file-path)
 )
 ;(define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
 ;(define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
@@ -228,6 +265,14 @@ There are two things you can do about this warning:
 ;(add-hook 'c-mode-hook 'helm-gtags-mode)
 ;(add-hook 'c++-mode-hook 'helm-gtags-mode)
 
+;; Plantuml
+    (setq plantuml-jar-path "/home/vsarchelu/plantuml.jar")
+    (setq plantuml-default-exec-mode 'jar)
+
+    ;; Sample executable configuration
+    ;;(setq plantuml-executable-path "/path/to/your/copy/of/plantuml.bin")
+    ;;(setq plantuml-default-exec-mode 'executable)
+
 
 ;; lsp
 (require 'lsp-mode)
@@ -250,6 +295,9 @@ There are two things you can do about this warning:
   (setq company-transformers nil
         company-lsp-async t
         company-lsp-cache-candidates nil)
+
+;; (setq lsp-enable-on-type-formatting nil)
+(setq clang-format-style "file")
 
 ;; flycheck
 (require 'flycheck)
@@ -277,3 +325,37 @@ There are two things you can do about this warning:
     (org-element-parse-buffer)
   )
 )
+
+
+;; Copy current buffer path
+(defun xah-copy-file-path (&optional @dir-path-only-p)
+  "Copy the current buffer's file path or dired path to `kill-ring'.
+Result is full path.
+If `universal-argument' is called first, copy only the dir path.
+
+If in dired, copy the file/dir cursor is on, or marked files.
+
+If a buffer is not file and not dired, copy value of `default-directory' (which is usually the “current” dir when that buffer was created)
+
+URL `http://ergoemacs.org/emacs/emacs_copy_file_path.html'
+Version 2017-09-01"
+  (interactive "P")
+  (let (($fpath
+         (if (string-equal major-mode 'dired-mode)
+             (progn
+               (let (($result (mapconcat 'identity (dired-get-marked-files) "\n")))
+                 (if (equal (length $result) 0)
+                     (progn default-directory )
+                   (progn $result))))
+           (if (buffer-file-name)
+               (buffer-file-name)
+             (expand-file-name default-directory)))))
+    (kill-new
+     (if @dir-path-only-p
+         (progn
+           (message "Directory path copied: 「%s」" (file-name-directory $fpath))
+           (file-name-directory $fpath))
+       (progn
+         (message "File path copied: 「%s」" $fpath)
+         $fpath )))))
+
