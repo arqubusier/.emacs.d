@@ -15,7 +15,49 @@ There are two things you can do about this warning:
   )
 (package-initialize)
 
+;; Tab
+(setq-default tab-width 4)
+
 (setq-default word-wrap t)
+
+;; Spelling
+
+(dolist (hook '(lisp-mode-hook
+                emacs-lisp-mode-hook
+                c-mode-common-hook
+                python-mode-hook
+                shell-mode-hook
+                LaTeX-mode-hook))
+  (add-hook hook 'flyspell-prog-mode))
+
+                                        ;
+;; Save session
+(desktop-save-mode 1)
+(savehist-mode 1)
+
+;; Copy paste
+(setq x-select-enable-primary t)
+(setq x-select-enable-clipboard t)
+
+;; Gui elements
+(menu-bar-mode -1)
+(tool-bar-mode -1)
+
+;; Which function
+(which-function-mode)
+(setq which-func-unknown "n/a")
+;; Show the current function name in the header line
+(setq-default header-line-format
+              '((which-func-mode ("" which-func-format " "))))
+(setq mode-line-misc-info
+            ;; We remove Which Function Mode from the mode line, because it's mostly
+            ;; invisible here anyway.
+            (assq-delete-all 'which-func-mode mode-line-misc-info))
+
+
+;; Solarized
+(load-theme 'solarized-light t)
+;(load-theme 'solarized-dark t)
 
 ;; Clang format
 (defun format-and-save()
@@ -42,12 +84,18 @@ There are two things you can do about this warning:
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(c-basic-offset 2)
+ '(custom-safe-themes
+   (quote
+    ("00445e6f15d31e9afaa23ed0d765850e9cd5e929be5e8e63b114a3346236c44c" "830877f4aab227556548dc0a28bf395d0abe0e3a0ab95455731c9ea5ab5fe4e1" "2809bcb77ad21312897b541134981282dc455ccd7c14d74cc333b6e549b824f3" "7f1d414afda803f3244c6fb4c2c64bea44dac040ed3731ec9d75275b9e831fe5" default)))
  '(helm-gtags-auto-update t)
  '(helm-gtags-ignore-case t)
  '(helm-gtags-path-style (quote relative))
  '(package-selected-packages
    (quote
-    (evil-numbers flycheck lsp-ui helm-lsp helm-xref lsp-mode magit clang-format helm-projectile zzz-to-char projectile fill-column-indicator yasnippet volatile-highlights helm-gtags evil company clojure-mode))))
+    (evil-numbers solarized-theme flycheck lsp-ui helm-lsp helm-xref lsp-mode magit clang-format helm-projectile zzz-to-char projectile fill-column-indicator yasnippet volatile-highlights helm-gtags evil company clojure-mode)))
+ '(safe-local-variable-values
+   (quote
+    ((gud-gdb-command-name . "/home/vsarchelu/amsr-mono/adaptive-microsar/builds/native/amsr-vector-fs-libvac/test/gtest_libvac_test")))))
 
 (defconst helu-style
   '("gnu"
@@ -59,13 +107,20 @@ There are two things you can do about this warning:
 ;
 ; Org Mode
 ;
-(defun org-config () ((make-local-variable 'evil-auto-indent) (setq evil-auto-indent nil)))
-(add-hook 'org-mode-hook 'org-config)
+;(defun org-config () ((make-local-variable 'evil-auto-indent) (setq evil-auto-indent nil)))
+;(remove-hook 'org-mode-hook 'org-config)
 
 (setq org-todo-keywords
       '((sequence "TODO" "REVIEW" "|" "DONE")))
 
-
+(setq org-capture-templates
+      '(("t" "Todo" entry (file+headline "~/notes/todo.org" "Tasks")
+         "* TODO %?\n  \n")
+        ("j" "Job" entry (file+headline "~/notes/job.org" "Tasks")
+         "* TODO %?\n  \n")))
+;
+; Evil
+;
 (add-to-list 'load-path "~/.emacs.d/evil")
 (require 'evil)
 (evil-mode 1)
@@ -80,6 +135,7 @@ There are two things you can do about this warning:
 
 ; bindings and functions
 (defun arm-gdb () "Run arm-none-eabi-gdb." (interactive (gdb "arm-none-eabi-gdb -i=mi")))
+(defun gdb-custom () "Run gdb with 'gdb-args'." (interactive (gdb (compile-command))))
 
 (global-set-key (kbd "C-c h") 'helm-command-prefix)
 (global-unset-key (kbd "C-x c"))
@@ -91,6 +147,10 @@ There are two things you can do about this warning:
 (global-set-key (kbd "C-x C-f") 'helm-find-files)
 (global-set-key (kbd "C-c h o") 'helm-occur)
 (global-set-key (kbd "C-c h x") 'helm-register)
+
+(defun myprevious-window ()
+    (interactive)
+    (other-window -1))
 
 (with-eval-after-load 'evil-maps
     (define-key evil-insert-state-map (kbd "C-c") 'evil-normal-state)
@@ -109,11 +169,14 @@ There are two things you can do about this warning:
     (define-key evil-motion-state-map (kbd "SPC e") 'eval-buffer)
     (define-key evil-motion-state-map (kbd "SPC f") 'next-error)
     (define-key evil-motion-state-map (kbd "SPC g") 'magit-file-dispatch)
+    (define-key evil-motion-state-map (kbd "SPC j") 'other-window)
+    (define-key evil-motion-state-map (kbd "SPC k") 'myprevious-window)
     (define-key evil-motion-state-map (kbd "SPC m n") 'smerge-next)
     (define-key evil-motion-state-map (kbd "SPC m p") 'smerge-previous)
     (define-key evil-motion-state-map (kbd "SPC m RET") 'smerge-keep-current)
     (define-key evil-motion-state-map (kbd "SPC m m") 'smerge-keep-mine)
     (define-key evil-motion-state-map (kbd "SPC m o") 'smerge-keep-other)
+    (define-key evil-motion-state-map (kbd "SPC o") 'org-capture)
     (define-key evil-motion-state-map (kbd "SPC p") 'projectile-command-map)
     (define-key evil-motion-state-map (kbd "SPC q") 'magit-blame-quit)
     (define-key evil-motion-state-map (kbd "SPC r") 'lsp-find-references)
@@ -192,3 +255,25 @@ There are two things you can do about this warning:
 (require 'flycheck)
 (add-hook 'after-init-hook #'global-flycheck-mode)
 
+
+;; org2anki
+(defun print-headings ()
+  "print all headings in current buffer (of org mode).
+2019-01-14"
+  (interactive)
+  (with-output-to-temp-buffer "*xah temp out*"
+    (org-element-map (org-element-parse-buffer) 'paragraph
+      (lambda (x)
+        (princ (org-element-interpret-data x))
+        (terpri )))))
+
+        ;(princ (org-element-property :raw x))
+
+(defun org-test ()
+  "print all headings in current buffer (of org mode).
+2019-01-14"
+  (interactive)
+  (with-output-to-temp-buffer "*xah temp out*"
+    (org-element-parse-buffer)
+  )
+)
