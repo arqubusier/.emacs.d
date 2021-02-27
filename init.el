@@ -15,9 +15,9 @@ There are two things you can do about this warning:
   )
 (package-initialize)
 
-;; Tab
+;; Tabs
 (setq-default tab-width 4)
-
+(defvaralias 'c-basic-offset 'tab-width)
 (setq-default word-wrap t)
 
 
