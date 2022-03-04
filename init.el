@@ -251,3 +251,11 @@
 
 (use-package project)
 (use-package eglot)
+
+(add-hook 'c-mode-common-hook 'hs-minor-mode)
+
+;;------------------------------------------------------------------------------
+;; Misc
+;;------------------------------------------------------------------------------
+(eval-after-load "term"
+  '(define-key term-raw-map (kbd "C-c C-y") 'term-paste))
