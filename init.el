@@ -32,6 +32,8 @@
 (use-package straight
              :custom (straight-use-package-by-default t))
 
+(require 'use-package-ensure)
+(setq use-package-always-ensure t)
 ;;------------------------------------------------------------------------------
 ;; Org
 ;;------------------------------------------------------------------------------
@@ -39,7 +41,6 @@
 (add-hook 'org-mode-hook 'turn-on-auto-fill)
 
 (use-package org-roam
-  :ensure t
   :init
   (setq org-roam-v2-ack t)
   (mkdir "~/roam-notes" t)
@@ -63,7 +64,6 @@
 ;; completion
 ;;------------------------------------------------------------------------------
 (use-package vertico
-  :ensure t
   :custom
   (vertico-cycle t)
   :init
@@ -75,7 +75,6 @@
 
 (use-package marginalia
   :after vertico
-  :ensure t
   :init
   (marginalia-mode))
 
@@ -195,7 +194,6 @@
 )
 
 (use-package orderless
-  :ensure t
   :custom (completion-styles '(orderless)))
 
 (use-package corfu
@@ -244,18 +242,30 @@
 ;;------------------------------------------------------------------------------
 (use-package magit)
 (use-package solarized-theme
-  :ensure t
   :config
   (load-theme 'solarized-light t))
 
 
-(use-package project)
 (use-package eglot)
+(use-package project) ;; For eglot
+(use-package projectile
+  :hook (prog-mode))
+(use-package ag)
 
-(add-hook 'c-mode-common-hook 'hs-minor-mode)
 
 ;;------------------------------------------------------------------------------
 ;; Misc
 ;;------------------------------------------------------------------------------
 (eval-after-load "term"
   '(define-key term-raw-map (kbd "C-c C-y") 'term-paste))
+
+(use-package hideshow 
+  :config
+  (add-to-list 'hs-special-modes-alist
+               '(nxml-mode
+		 "<!--\\|<[^/>]*[^/]>"
+		 "-->\\|</[^/>]*[^/]>"
+
+		 "<!--"
+		 sgml-skip-tag-forward
+		 nil)))
