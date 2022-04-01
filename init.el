@@ -58,7 +58,12 @@
 ;;
 (use-package evil
              :init (setq evil-want-C-i-jump nil)
-             :config (evil-mode))
+             :config
+	     (setcdr evil-insert-state-map nil)
+	     (define-key evil-insert-state-map [escape] 'evil-normal-state)
+	     (define-key evil-normal-state-map (kbd "C-u") 'evil-scroll-up)
+	     (evil-mode)
+	     )
 
 ;;------------------------------------------------------------------------------
 ;; completion
@@ -240,6 +245,26 @@
 ;;------------------------------------------------------------------------------
 ;; Coding
 ;;------------------------------------------------------------------------------
+(defun clang-format-save-hook-for-this-buffer ()
+  "Create a buffer local save hook."
+  (interactive)
+  (add-hook 'before-save-hook
+            (lambda ()
+	      (message "running clang-format")
+              (when (locate-dominating-file "." ".clang-format")
+                (clang-format-buffer))
+              ;; Continue to save.
+              nil)
+            nil
+            ;; Buffer local hook.
+            t))
+(use-package clang-format
+  :config
+  (add-hook 'c-mode-hook 'clang-format-save-hook-for-this-buffer)
+  (add-hook 'c++-mode-hook 'clang-format-save-hook-for-this-buffer)
+)
+(require 'clang-format)
+
 (use-package magit)
 (use-package solarized-theme
   :config
@@ -251,14 +276,18 @@
 (use-package projectile
   :hook (prog-mode))
 (use-package ag)
-
+(use-package xterm-color
+  :config
+  (setq compilation-environment '("TERM=xterm-256color"))
+  (defun my/advice-compilation-filter (f proc string)
+    (funcall f proc (xterm-color-filter string)))
+  (advice-add 'compilation-filter :around #'my/advice-compilation-filter))
+(use-package realgud)
+(use-package rust-mode)
 
 ;;------------------------------------------------------------------------------
 ;; Misc
 ;;------------------------------------------------------------------------------
-(eval-after-load "term"
-  '(define-key term-raw-map (kbd "C-c C-y") 'term-paste))
-
 (use-package hideshow 
   :config
   (add-to-list 'hs-special-modes-alist
