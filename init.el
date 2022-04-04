@@ -56,13 +56,16 @@
 ;;
 ;; evil
 ;;
+(use-package undo-tree)
 (use-package evil
              :init (setq evil-want-C-i-jump nil)
              :config
 	     (setcdr evil-insert-state-map nil)
 	     (define-key evil-insert-state-map [escape] 'evil-normal-state)
 	     (define-key evil-normal-state-map (kbd "C-u") 'evil-scroll-up)
+	     (setq evil-undo-system 'undo-tree)
 	     (evil-mode)
+	     (turn-on-undo-tree-mode)
 	     )
 
 ;;------------------------------------------------------------------------------
@@ -273,8 +276,6 @@
 
 (use-package eglot)
 (use-package project) ;; For eglot
-(use-package projectile
-  :hook (prog-mode))
 (use-package ag)
 (use-package xterm-color
   :config
