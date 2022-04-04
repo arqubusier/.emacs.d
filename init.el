@@ -65,7 +65,7 @@
 	     (define-key evil-normal-state-map (kbd "C-u") 'evil-scroll-up)
 	     (setq evil-undo-system 'undo-tree)
 	     (evil-mode)
-	     (turn-on-undo-tree-mode)
+	     (add-hook 'evil-local-mode-hook 'turn-on-undo-tree-mode)
 	     )
 
 ;;------------------------------------------------------------------------------
