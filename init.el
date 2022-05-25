@@ -349,6 +349,7 @@
   (advice-add 'compilation-filter :around #'my/advice-compilation-filter))
 (use-package realgud)
 (use-package rust-mode)
+(use-package cmake-mode)
 
 ;;------------------------------------------------------------------------------
 ;; Misc
@@ -399,3 +400,8 @@
          ))
 
 (require 'dired-subtree)
+
+(recentf-mode 1)
+(setq recentf-max-menu-items 100)
+(setq recentf-max-saved-items 100)
+(run-at-time nil (* 5 60) 'recentf-save-list)
