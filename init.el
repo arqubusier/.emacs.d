@@ -251,6 +251,7 @@
 (use-package projectile
   :hook (prog-mode))
 (use-package ag)
+(use-package rust-mode)
 
 
 ;;------------------------------------------------------------------------------
