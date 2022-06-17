@@ -68,6 +68,21 @@
 (add-hook 'org-mode-hook #'(lambda () (setq fill-column 80)))
 (add-hook 'org-mode-hook 'turn-on-auto-fill)
 
+
+(defun my-org-screenshot ()
+  "Take a screenshot into a time stamped unique-named file in the
+same directory as the org-buffer and insert a link to this file."
+  (interactive)
+  (setq filename
+        (concat
+         (make-temp-name
+          (concat (buffer-file-name)
+                  "_"
+                  (format-time-string "%Y%m%d_%H%M%S_")) ) ".png"))
+  (call-process "import" nil nil nil filename)
+  (insert (concat "[[" filename "]]"))
+  (org-display-inline-images))
+
 (use-package org-roam
   :init
   (setq org-roam-v2-ack t)
@@ -323,7 +338,7 @@
   ;;(setq lsp-clangd-binary-path "/usr/bin/clangd")
   (setq lsp-clangd-binary-path "lsp-clients-clangd-args")
   (setq lsp-log-io t)
-  (setq lsp-clients-clangd-args '("--compile-commands-dir=/home/lundkhe/work/vihalp/1846/profile_linux_gcc8_preinstalled_debug"))
+  ;;(setq lsp-clients-clangd-args '("--compile-commands-dir=/home/lundkhe/work/vihalp/1846/profile_linux_gcc8_preinstalled_debug"))
   :hook (
          (c++-mode . lsp)
 	 )
@@ -362,7 +377,18 @@
                                      (interactive)
                                      (scroll-right 7)))
 
-(use-package multi-term)
+(use-package multi-term
+  :config
+  (add-hook 'term-mode-hook
+            (lambda ()
+              (define-key evil-normal-state-local-map
+                (kbd "SPC l") 'term-line-mode)
+              (define-key evil-normal-state-local-map
+		(kbd "SPC c") 'term-char-mode)
+	      )))
+
+(require 'multi-term)
+
 (use-package hideshow 
   :config
   (add-to-list 'hs-special-modes-alist
