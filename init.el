@@ -99,6 +99,14 @@ same directory as the org-buffer and insert a link to this file."
   )
 (require 'org-roam)
 
+(use-package org-journal
+  :config
+  (evil-global-set-key 'normal (kbd "SPC n d") 'org-journal-new-entry)
+  (evil-global-set-key 'normal (kbd "SPC n j") 'org-journal-next-entry)
+  (evil-global-set-key 'normal (kbd "SPC n k") 'org-journal-previous-entry)
+  (evil-global-set-key 'normal (kbd "SPC n s") 'org-journal-search-entry)
+  )
+
 ;;------------------------------------------------------------------------------
 ;; completion
 ;;------------------------------------------------------------------------------
