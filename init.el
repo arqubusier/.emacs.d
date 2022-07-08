@@ -293,7 +293,11 @@ same directory as the org-buffer and insert a link to this file."
 ;;------------------------------------------------------------------------------
 ;; Coding
 ;;------------------------------------------------------------------------------
-
+(use-package flyspell
+  :config
+(add-hook 'prog-mode-hook #'flyspell-prog-mode)
+  )
+(require 'flyspell)
 
 ;; Add this to .dir-locals.el of your project
 ;; ((c++-mode
