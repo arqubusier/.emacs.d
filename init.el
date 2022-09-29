@@ -68,6 +68,9 @@
 (add-hook 'org-mode-hook #'(lambda () (setq fill-column 80)))
 (add-hook 'org-mode-hook 'turn-on-auto-fill)
 
+(use-package org-download
+  :config
+  (add-hook 'dired-mode-hook 'org-download-enable))
 
 (defun my-org-screenshot ()
   "Take a screenshot into a time stamped unique-named file in the
@@ -293,6 +296,7 @@ same directory as the org-buffer and insert a link to this file."
 ;;------------------------------------------------------------------------------
 ;; Coding
 ;;------------------------------------------------------------------------------
+(add-hook 'prog-mode-hook #'yas-minor-mode-on)
 (use-package flyspell
   :config
 (add-hook 'prog-mode-hook #'flyspell-prog-mode)
@@ -377,6 +381,7 @@ same directory as the org-buffer and insert a link to this file."
 (use-package realgud)
 (use-package rust-mode)
 (use-package cmake-mode)
+(use-package yasnippet)
 
 ;;------------------------------------------------------------------------------
 ;; Misc
@@ -388,6 +393,7 @@ same directory as the org-buffer and insert a link to this file."
 (global-set-key (kbd "<mouse-6>") #'(lambda ()
                                      (interactive)
                                      (scroll-right 7)))
+(use-package smartparens)
 
 (use-package multi-term
   :config
@@ -443,3 +449,5 @@ same directory as the org-buffer and insert a link to this file."
 (setq recentf-max-menu-items 100)
 (setq recentf-max-saved-items 100)
 (run-at-time nil (* 5 60) 'recentf-save-list)
+
+(use-package pikchr-mode)
