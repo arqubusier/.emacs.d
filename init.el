@@ -246,6 +246,7 @@ same directory as the org-buffer and insert a link to this file."
   (evil-global-set-key 'normal (kbd "SPC d") 'consult-find)
   (evil-global-set-key 'normal (kbd "SPC g") 'consult-grep)
   (evil-global-set-key 'normal (kbd "SPC r") 'consult-ripgrep)
+  (evil-global-set-key 'normal (kbd "SPC c") #'project-compile)
 )
 (require 'consult)
 
@@ -267,14 +268,18 @@ same directory as the org-buffer and insert a link to this file."
   ;; (corfu-scroll-margin 5)        ;; Use scroll margin
 
   ;; You may want to enable Corfu only for certain modes.
-  ;; :hook ((prog-mode . corfu-mode)
-  ;;        (shell-mode . corfu-mode)
-  ;;        (eshell-mode . corfu-mode))
+  :config
+  :hook ((python-mode . corfu-mode)
+	 (c-mode . corfu-mode)
+	 (lisp-mode . corfu-mode)
+	 (c++-mode . corfu-mode)
+	 )
 
   ;; Recommended: Enable Corfu globally.
   ;; This is recommended since dabbrev can be used globally (M-/).
   :init
-  (corfu-global-mode))
+  ;;(corfu-global-mode)
+  )
 
 ;; A few more useful configurations...
 (use-package emacs
@@ -289,7 +294,19 @@ same directory as the org-buffer and insert a link to this file."
 
   ;; Enable indentation+completion using the TAB key.
   ;; `completion-at-point' is often bound to M-TAB.
-  (setq tab-always-indent 'complete))
+  (setq tab-always-indent 'complete)
+  ;; First indent then complete
+  ;; Force tab to use emacs generic tab function instead of language mode specific
+  ;; tab functions
+  (add-hook 'c++-mode
+            (lambda ()
+              (define-key evil-insert-state-local-map
+                (kbd "TAB") 'indent-for-tab-command)))
+  (add-hook 'c-mode
+            (lambda ()
+              (define-key evil-insert-state-local-map
+                (kbd "TAB") 'indent-for-tab-command)))
+  )
 
 
 
@@ -381,11 +398,28 @@ same directory as the org-buffer and insert a link to this file."
 (use-package realgud)
 (use-package rust-mode)
 (use-package cmake-mode)
-(use-package yasnippet)
+(use-package yasnippet
+  :config
+(setq yas-snippet-dirs '( "~/.emacs.d/snippets" ))
+(yas-reload-all)
+  )
 
 ;;------------------------------------------------------------------------------
 ;; Misc
 ;;------------------------------------------------------------------------------
+(setq desktop-path '("~/.emacs.d/"))
+(setq desktop-dirname "~/.emacs.d/")
+(setq desktop-base-file-name "emacs-desktop")
+(desktop-save-mode)
+(setq desktop-buffers-not-to-save
+     (concat "\\("
+             "^nn\\.a[0-9]+\\|\\.log\\|(ftp)\\|^tags\\|^TAGS"
+             "\\|\\.emacs.*\\|\\.bbdb"
+        "\\)$"))
+(add-to-list 'desktop-modes-not-to-save 'dired-mode)
+(add-to-list 'desktop-modes-not-to-save 'Info-mode)
+(add-to-list 'desktop-modes-not-to-save 'info-lookup-mode)
+(add-to-list 'desktop-modes-not-to-save 'fundamental-mode)
 
 (global-set-key (kbd "<mouse-7>") #'(lambda ()
                                      (interactive)
@@ -403,7 +437,8 @@ same directory as the org-buffer and insert a link to this file."
                 (kbd "SPC l") 'term-line-mode)
               (define-key evil-normal-state-local-map
 		(kbd "SPC c") 'term-char-mode)
-	      )))
+	      )
+	    ))
 
 (require 'multi-term)
 
