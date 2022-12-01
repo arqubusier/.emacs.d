@@ -67,7 +67,8 @@
 ;;------------------------------------------------------------------------------
 (add-hook 'org-mode-hook #'(lambda () (setq fill-column 80)))
 (add-hook 'org-mode-hook 'turn-on-auto-fill)
-
+(setq org-startup-with-inline-images t)
+  
 (use-package org-download
   :config
   (add-hook 'dired-mode-hook 'org-download-enable))
@@ -320,12 +321,18 @@ same directory as the org-buffer and insert a link to this file."
   )
 (require 'flyspell)
 
+(add-hook 'c-mode-common-hook
+	  (lambda()
+	    (define-key evil-normal-state-local-map
+	      (kbd "SPC o") 'ff-find-other-file)
+	    )
+	  )
+
 ;; Add this to .dir-locals.el of your project
 ;; ((c++-mode
 ;;  (eval add-hook 'before-save-hook #'clang-format-buffer nil t)))
 
 (defun clang-format-save-hook-for-this-buffer ()
-  "Create a buffer local save hook."
   (interactive)
   (add-hook 'before-save-hook
             (lambda ()
@@ -365,17 +372,27 @@ same directory as the org-buffer and insert a link to this file."
   :config
   (load-theme 'solarized-light t))
 
+;; Symlink compile-commands.json to project root
 (use-package lsp-mode
   :init
   (setq lsp-keymap-prefix "C-c l")
   ;;(setq lsp-clangd-binary-path "/usr/bin/clangd")
   (setq lsp-clangd-binary-path "lsp-clients-clangd-args")
   (setq lsp-log-io t)
-  ;;(setq lsp-clients-clangd-args '("--compile-commands-dir=/home/lundkhe/work/vihalp/1846/profile_linux_gcc8_preinstalled_debug"))
+  ;;(setq lsp-clients-clangd-args '("--compile-commands-dir=profile_linux_gcc8_preinstalled_debug"))
   :hook (
          (c++-mode . lsp)
 	 )
-  :commands lsp)
+  :commands lsp
+  :config
+  (org-add-hook 'lsp-mode-hook
+		(lambda ()
+		  (define-key evil-normal-state-local-map
+                    (kbd "SPC l d") 'lsp-find-definition)
+		  (define-key evil-normal-state-local-map
+		    (kbd "SPC l r") 'lsp-find-references)
+		  ))
+  )
 
 ;;(use-package eglot
 ;;  :config
@@ -398,6 +415,7 @@ same directory as the org-buffer and insert a link to this file."
 (use-package realgud)
 (use-package rust-mode)
 (use-package cmake-mode)
+(use-package yaml-mode)
 (use-package yasnippet
   :config
 (setq yas-snippet-dirs '( "~/.emacs.d/snippets" ))
@@ -407,6 +425,7 @@ same directory as the org-buffer and insert a link to this file."
 ;;------------------------------------------------------------------------------
 ;; Misc
 ;;------------------------------------------------------------------------------
+(global-visual-line-mode 1)
 (setq desktop-path '("~/.emacs.d/"))
 (setq desktop-dirname "~/.emacs.d/")
 (setq desktop-base-file-name "emacs-desktop")
@@ -427,8 +446,21 @@ same directory as the org-buffer and insert a link to this file."
 (global-set-key (kbd "<mouse-6>") #'(lambda ()
                                      (interactive)
                                      (scroll-right 7)))
+(use-package org-present
+:config
+  (add-hook 'org-present-mode-hook
+            (lambda ()
+              (define-key evil-normal-state-local-map
+                (kbd "SPC n") 'org-present-next)
+              (define-key evil-normal-state-local-map
+		(kbd "SPC p") 'org-present-prev)
+              (define-key evil-normal-state-local-map
+		(kbd "SPC q") 'org-present-quit)
+	    ))
+  )
 (use-package smartparens)
 
+(setq term-buffer-maximum-size 20000) 
 (use-package multi-term
   :config
   (add-hook 'term-mode-hook
@@ -437,10 +469,15 @@ same directory as the org-buffer and insert a link to this file."
                 (kbd "SPC l") 'term-line-mode)
               (define-key evil-normal-state-local-map
 		(kbd "SPC c") 'term-char-mode)
-	      )
-	    ))
+	    )))
 
 (require 'multi-term)
+
+(straight-use-package
+'(aweshell :type git :host github :repo "manateelazycat/aweshell"))
+(require 'aweshell)
+
+(use-package tramp)
 
 (use-package hideshow 
   :config
@@ -486,3 +523,13 @@ same directory as the org-buffer and insert a link to this file."
 (run-at-time nil (* 5 60) 'recentf-save-list)
 
 (use-package pikchr-mode)
+
+(defun show-image-dimensions-in-mode-line ()
+  (interactive)
+  (let* ((image-dimensions (image-size (image-get-display-property) :pixels))
+         (width (car image-dimensions))
+         (height (cdr image-dimensions)))
+    (setq mode-line-buffer-identification
+          (format "%s %dx%d" (propertized-buffer-identification "%12b") width height))))
+
+(add-hook 'image-mode-hook #'show-image-dimensions-in-mode-line)
