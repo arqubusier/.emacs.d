@@ -364,10 +364,7 @@ same directory as the org-buffer and insert a link to this file."
   )
   
 
-(use-package magit
-  :config
-  (evil-global-set-key 'normal (kbd "SPC v") 'consult-buffer)
-  )
+(use-package magit)
 (use-package solarized-theme
   :config
   (load-theme 'solarized-light t))
@@ -426,19 +423,19 @@ same directory as the org-buffer and insert a link to this file."
 ;; Misc
 ;;------------------------------------------------------------------------------
 (global-visual-line-mode 1)
-(setq desktop-path '("~/.emacs.d/"))
-(setq desktop-dirname "~/.emacs.d/")
-(setq desktop-base-file-name "emacs-desktop")
-(desktop-save-mode)
-(setq desktop-buffers-not-to-save
-     (concat "\\("
-             "^nn\\.a[0-9]+\\|\\.log\\|(ftp)\\|^tags\\|^TAGS"
-             "\\|\\.emacs.*\\|\\.bbdb"
-        "\\)$"))
-(add-to-list 'desktop-modes-not-to-save 'dired-mode)
-(add-to-list 'desktop-modes-not-to-save 'Info-mode)
-(add-to-list 'desktop-modes-not-to-save 'info-lookup-mode)
-(add-to-list 'desktop-modes-not-to-save 'fundamental-mode)
+;; (setq desktop-path '("~/.emacs.d/"))
+;; (setq desktop-dirname "~/.emacs.d/")
+;; (setq desktop-base-file-name "emacs-desktop")
+;; (desktop-save-mode)
+;; (setq desktop-buffers-not-to-save
+;;      (concat "\\("
+;;              "^nn\\.a[0-9]+\\|\\.log\\|(ftp)\\|^tags\\|^TAGS"
+;;              "\\|\\.emacs.*\\|\\.bbdb"
+;;         "\\)$"))
+;; (add-to-list 'desktop-modes-not-to-save 'dired-mode)
+;; (add-to-list 'desktop-modes-not-to-save 'Info-mode)
+;; (add-to-list 'desktop-modes-not-to-save 'info-lookup-mode)
+;; (add-to-list 'desktop-modes-not-to-save 'fundamental-mode)
 
 (global-set-key (kbd "<mouse-7>") #'(lambda ()
                                      (interactive)
@@ -499,6 +496,16 @@ same directory as the org-buffer and insert a link to this file."
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(bmkp-last-as-first-bookmark-file "~/.emacs.d/bookmarks")
+ '(display-buffer-alist
+   '(("\\(?:.*shell\\)\\|\\(?:\\*grep\\)\\|\\(?:\\*compilation\\*\\)\\|\\(?:\\*terminal<[0-9]+>\\*\\)" display-buffer-in-side-window
+      (side . bottom)
+      (slot . 0)
+      (window-height . 10))
+     ("\\*help\\*" display-buffer-in-side-window
+      (side . right)
+      (slot . 0)
+      (window-width . 80))))
  '(safe-local-variable-values
    '((eval add-hook 'before-save-hook #'clang-format-buffer nil t)))
  '(warning-suppress-log-types '((comp))))
@@ -533,3 +540,17 @@ same directory as the org-buffer and insert a link to this file."
           (format "%s %dx%d" (propertized-buffer-identification "%12b") width height))))
 
 (add-hook 'image-mode-hook #'show-image-dimensions-in-mode-line)
+
+(setq make-backup-files nil)
+
+(use-package bookmark+
+  :config 
+  (evil-global-set-key 'normal (kbd "SPC x x") 'bookmark-jump)
+  (evil-global-set-key 'normal (kbd "SPC x s") 'bookmark-set)
+  (evil-global-set-key 'normal (kbd "SPC x l") 'bookmark-set)
+  (evil-global-set-key 'normal (kbd "SPC x t") 'bookmark-tag)
+  )
+
+(setq dired-mouse-drag-files t)
+
+(setq switch-to-buffer-obey-display-actions t)
