@@ -391,6 +391,9 @@ same directory as the org-buffer and insert a link to this file."
 		  ))
   )
 
+(use-package treemacs)
+(use-package lsp-treemacs)
+
 ;;(use-package eglot
 ;;  :config
 ;;  (setq eglot-connect-timeout 60)
@@ -554,3 +557,7 @@ same directory as the org-buffer and insert a link to this file."
 (setq dired-mouse-drag-files t)
 
 (setq switch-to-buffer-obey-display-actions t)
+
+(use-package which-key)
+(require 'which-key)
+(which-key-mode)
