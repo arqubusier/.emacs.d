@@ -318,6 +318,7 @@ same directory as the org-buffer and insert a link to this file."
 (use-package flyspell
   :config
 (add-hook 'prog-mode-hook #'flyspell-prog-mode)
+(add-hook 'org-mode-hook 'turn-on-flyspell)
   )
 (require 'flyspell)
 
@@ -390,6 +391,12 @@ same directory as the org-buffer and insert a link to this file."
 		    (kbd "SPC l r") 'lsp-find-references)
 		  ))
   )
+(use-package lsp-ui
+  :config
+  (setq lsp-ui-doc-enable t)
+  (setq lsp-ui-doc-show-with-cursor t)
+  (setq lsp-ui-doc-show-with-mouse t)
+  )
 
 (use-package treemacs)
 (use-package lsp-treemacs)
@@ -422,6 +429,13 @@ same directory as the org-buffer and insert a link to this file."
 (yas-reload-all)
   )
 
+(defun compilation-done-notify (buffer desc)
+  (notifications-notify
+   :title "Compilation Done!"
+   :body (message "%s %s" buffer desc)
+   )
+  )
+(add-hook 'compilation-finish-functions #'compilation-done-notify)
 ;;------------------------------------------------------------------------------
 ;; Misc
 ;;------------------------------------------------------------------------------
@@ -561,3 +575,8 @@ same directory as the org-buffer and insert a link to this file."
 (use-package which-key)
 (require 'which-key)
 (which-key-mode)
+
+
+(require 'notifications)
+(use-package alert)
+(require 'alert)
