@@ -67,7 +67,12 @@
 ;;------------------------------------------------------------------------------
 (add-hook 'org-mode-hook #'(lambda () (setq fill-column 80)))
 (add-hook 'org-mode-hook 'turn-on-auto-fill)
+(add-hook 'org-mode-hook 'org-display-inline-images)
 (setq org-startup-with-inline-images t)
+
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((dot . t)))
   
 (use-package org-download
   :config
@@ -87,21 +92,25 @@ same directory as the org-buffer and insert a link to this file."
   (insert (concat "[[" filename "]]"))
   (org-display-inline-images))
 
+(use-package sqlite3)
+(use-package emacsql)
+(use-package emacsql-sqlite3)
+(use-package emacsql-sqlite)
+
 (use-package org-roam
-  :init
-  (setq org-roam-v2-ack t)
-  (mkdir "~/roam-notes" t)
-  (setq org-roam-directory (file-truename "~/roam-notes"))
+  :ensure t
+  :custom
+  (org-roam-directory (file-truename "~/roam-notes"))
   :bind (("C-c n l" . org-roam-buffer-toggle)
 	 ("C-c n f" . org-roam-node-find)
 	 ("C-c n i" . org-roam-node-insert))
   :config
-  (org-roam-setup)
+  (setq org-roam-node-display-template (concat "${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
   (org-roam-db-autosync-mode)
+
   (evil-global-set-key 'normal (kbd "SPC n f") 'org-roam-node-find)
   (evil-global-set-key 'normal (kbd "SPC n i") 'org-roam-node-insert)
   )
-(require 'org-roam)
 
 (use-package org-journal
   :config
@@ -110,6 +119,7 @@ same directory as the org-buffer and insert a link to this file."
   (evil-global-set-key 'normal (kbd "SPC n k") 'org-journal-previous-entry)
   (evil-global-set-key 'normal (kbd "SPC n s") 'org-journal-search-entry)
   )
+
 
 ;;------------------------------------------------------------------------------
 ;; completion
@@ -256,9 +266,9 @@ same directory as the org-buffer and insert a link to this file."
 
 (use-package corfu
   ;; Optional customizations
-  ;; :custom
-  ;; (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
-  ;; (corfu-auto t)                 ;; Enable auto completion
+  :custom
+  (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
+  (corfu-auto t)                 ;; Enable auto completion
   ;; (corfu-separator ?\s)          ;; Orderless field separator
   ;; (corfu-quit-at-boundary nil)   ;; Never quit at completion boundary
   ;; (corfu-quit-no-match nil)      ;; Never quit, even if there is no match
@@ -279,7 +289,13 @@ same directory as the org-buffer and insert a link to this file."
   ;; Recommended: Enable Corfu globally.
   ;; This is recommended since dabbrev can be used globally (M-/).
   :init
-  ;;(corfu-global-mode)
+  (corfu-global-mode)
+  :bind
+  (:map corfu-map
+        ("TAB" . corfu-next)
+        ([tab] . corfu-next)
+        ("S-TAB" . corfu-previous)
+        ([backtab] . corfu-previous))
   )
 
 ;; A few more useful configurations...
@@ -299,14 +315,30 @@ same directory as the org-buffer and insert a link to this file."
   ;; First indent then complete
   ;; Force tab to use emacs generic tab function instead of language mode specific
   ;; tab functions
-  (add-hook 'c++-mode
-            (lambda ()
-              (define-key evil-insert-state-local-map
-                (kbd "TAB") 'indent-for-tab-command)))
-  (add-hook 'c-mode
-            (lambda ()
-              (define-key evil-insert-state-local-map
-                (kbd "TAB") 'indent-for-tab-command)))
+  (global-set-key (kbd "<f5>")
+		  #'(lambda()
+		      (interactive)
+		      (pop-to-buffer "*terminal<1>*")))
+  (global-set-key (kbd "<f6>")
+		  #'(lambda()
+		      (interactive)
+		      (pop-to-buffer "*terminal<2>*")))
+  (global-set-key (kbd "<f7>")
+		  #'(lambda()
+		      (interactive)
+		      (pop-to-buffer "*terminal<3>*")))
+  (global-set-key (kbd "<f8>")
+		  #'(lambda()
+		      (interactive)
+		      (pop-to-buffer "*terminal<4>*")))
+  (global-set-key (kbd "<f9>")
+		  #'(lambda()
+		      (interactive)
+		      (pop-to-buffer "*compilation*")))
+  :bind (
+	 :map c-mode-base-map
+	 ("TAB" . indent-for-tab-command)
+	 )
   )
 
 
@@ -322,11 +354,19 @@ same directory as the org-buffer and insert a link to this file."
   )
 (require 'flyspell)
 
+(defun my-c-common-mode-hook ()
+ (define-key evil-normal-state-local-map
+ (kbd "SPC o") 'ff-find-other-file)
+ (setq indent-tabs-mode nil)
+ (setq display-fill-column-indicator-column 120)
+ (display-fill-column-indicator-mode)
+  )
+(use-package google-c-style)
+(setq c-default-style "google")
 (add-hook 'c-mode-common-hook
-	  (lambda()
-	    (define-key evil-normal-state-local-map
-	      (kbd "SPC o") 'ff-find-other-file)
-	    )
+	  'my-c-common-mode-hook
+	  'google-set-c-style
+	  'google-make-newline-indent
 	  )
 
 ;; Add this to .dir-locals.el of your project
@@ -460,6 +500,32 @@ same directory as the org-buffer and insert a link to this file."
 (global-set-key (kbd "<mouse-6>") #'(lambda ()
                                      (interactive)
                                      (scroll-right 7)))
+
+(use-package visual-fill-column
+  :config
+ (setq visual-fill-column-width 120)
+ (setq-default visual-fill-column-center-text t)
+ )
+
+(defun my/org-present-start ()
+  (menu-bar-mode 0)
+  (tool-bar-mode 0)
+  (scroll-bar-mode 0)
+  (org-display-inline-images)
+  (org-hide-block-all)
+  ;; Center the presentation and wrap lines
+  (visual-fill-column-mode 1)
+  (visual-line-mode 1))
+
+(defun my/org-present-end ()
+  (menu-bar-mode 1)
+  (tool-bar-mode 1)
+  (scroll-bar-mode 1)
+  (org-show-block-all)
+  ;; Stop centering the document
+  (visual-fill-column-mode 0)
+  (visual-line-mode 0))
+
 (use-package org-present
 :config
   (add-hook 'org-present-mode-hook
@@ -470,8 +536,11 @@ same directory as the org-buffer and insert a link to this file."
 		(kbd "SPC p") 'org-present-prev)
               (define-key evil-normal-state-local-map
 		(kbd "SPC q") 'org-present-quit)
-	    ))
+	      ))
+  (add-hook 'org-present-mode-hook 'my/org-present-start)
+  (add-hook 'org-present-mode-quit-hook 'my/org-present-end)
   )
+
 (use-package smartparens)
 
 (setq term-buffer-maximum-size 20000) 
@@ -580,3 +649,18 @@ same directory as the org-buffer and insert a link to this file."
 (require 'notifications)
 (use-package alert)
 (require 'alert)
+
+(use-package elfeed
+  :ensure t
+  :config
+  (setq elfeed-db-directory (expand-file-name "elfeed" user-emacs-directory)
+	elfeed-show-entry-switch 'display-buffer)
+  :bind
+  ("C-x w" . elfeed ))
+
+;; Used for configuration of elfeed using org-files
+(use-package elfeed-org
+  :ensure t
+  :config
+  (elfeed-org)
+  (setq rmh-elfeed-org-files (list "~/.emacs.d/elfeed.org")))
