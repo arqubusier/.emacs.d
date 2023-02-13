@@ -257,7 +257,9 @@ same directory as the org-buffer and insert a link to this file."
   (evil-global-set-key 'normal (kbd "SPC d") 'consult-find)
   (evil-global-set-key 'normal (kbd "SPC g") 'consult-grep)
   (evil-global-set-key 'normal (kbd "SPC r") 'consult-ripgrep)
-  (evil-global-set-key 'normal (kbd "SPC c") #'project-compile)
+  (evil-global-set-key 'normal (kbd "SPC x c") #'project-compile)
+  (evil-global-set-key 'normal (kbd "SPC x b") #'conan-build)
+  (evil-global-set-key 'normal (kbd "SPC x i") #'conan-install)
 )
 (require 'consult)
 
@@ -664,3 +666,35 @@ same directory as the org-buffer and insert a link to this file."
   :config
   (elfeed-org)
   (setq rmh-elfeed-org-files (list "~/.emacs.d/elfeed.org")))
+
+;; sick
+
+(defun conan-build-default (profile)
+(format "euler devshell --commands='cd %s && conan build .. ; exit'" profile)
+    )
+(defun conan-install-default (profile)
+(format "euler devshell --commands='mkdir -p %s && cd %s &&  conan install -pr %s --update --build missing .. -e CMAKE_EXPORT_COMPILE_COMMANDS=ON ; exit'" profile profile profile))
+
+(defvar conan-build-command #'conan-build-default)
+(defvar conan-install-command #'conan-install-default)
+
+(defun conan-profiles ()
+ (split-string (shell-command-to-string "conan profile list")))
+
+(defun conan-build (arg)
+  (interactive
+   (list
+    (completing-read "conan profile " (conan-profiles))))
+  (message arg)
+  (let ((default-directory (vc-root-dir)))
+  (compile (funcall conan-build-command arg)))
+  )
+
+(defun conan-install (arg)
+  (interactive
+   (list
+    (completing-read "conan profile " (conan-profiles))))
+  (message arg)
+  (let ((default-directory (vc-root-dir)))
+  (compile (funcall conan-install-command arg)))
+  )
