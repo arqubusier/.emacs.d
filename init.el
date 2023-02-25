@@ -34,10 +34,38 @@
 
 (require 'use-package-ensure)
 (setq use-package-always-ensure t)
+
+
+
+;;
+;; evil
+;;
+(use-package undo-fu)
+(use-package evil
+             :init
+	     (setq evil-want-C-i-jump nil)
+	     (setq evil-undo-system 'undo-fu)
+             :config
+	     (setcdr evil-insert-state-map nil)
+	     (define-key evil-insert-state-map [escape] 'evil-normal-state)
+	     (define-key evil-normal-state-map (kbd "C-u") 'evil-scroll-up)
+	     (evil-mode)
+	     (evil-global-set-key 'normal (kbd "SPC f") #'find-file)
+	     (evil-global-set-key 'normal (kbd "SPC j") #'evil-window-next)
+	     (evil-global-set-key 'normal (kbd "SPC k") #'evil-window-prev)
+             (evil-global-set-key 'normal (kbd "SPC SPC") #'execute-extended-command)
+             (evil-global-set-key 'normal (kbd "SPC h") #'dired-jump)
+             (evil-global-set-key 'normal (kbd "SPC s") #'save-buffer)
+	     (add-hook 'dired-mode-hook
+		       (lambda()
+			 (local-unset-key (kbd "SPC"))))
+	     )
+(require 'evil)
+
 ;;------------------------------------------------------------------------------
 ;; Org
 ;;------------------------------------------------------------------------------
-(add-hook 'org-mode-hook '(lambda () (setq fill-column 80)))
+(add-hook 'org-mode-hook #'(lambda () (setq fill-column 80)))
 (add-hook 'org-mode-hook 'turn-on-auto-fill)
 
 (use-package org-roam
@@ -51,14 +79,10 @@
   :config
   (org-roam-setup)
   (org-roam-db-autosync-mode)
+  (evil-global-set-key 'normal (kbd "SPC n f") 'org-roam-node-find)
+  (evil-global-set-key 'normal (kbd "SPC n i") 'org-roam-node-insert)
   )
-
-;;
-;; evil
-;;
-(use-package evil
-             :init (setq evil-want-C-i-jump nil)
-             :config (evil-mode))
+(require 'org-roam)
 
 ;;------------------------------------------------------------------------------
 ;; completion
@@ -191,7 +215,13 @@
   ;; (setq consult-project-function (lambda (_) (vc-root-dir)))
   ;;;; 4. locate-dominating-file
   ;; (setq consult-project-function (lambda (_) (locate-dominating-file "." ".git")))
+
+  (evil-global-set-key 'normal (kbd "SPC b") 'consult-buffer)
+  (evil-global-set-key 'normal (kbd "SPC d") 'consult-find)
+  (evil-global-set-key 'normal (kbd "SPC g") 'consult-grep)
+  (evil-global-set-key 'normal (kbd "SPC r") 'consult-ripgrep)
 )
+(require 'consult)
 
 (use-package orderless
   :custom (completion-styles '(orderless)))
@@ -240,26 +270,102 @@
 ;;------------------------------------------------------------------------------
 ;; Coding
 ;;------------------------------------------------------------------------------
-(use-package magit)
+
+
+;; Add this to .dir-locals.el of your project
+;; ((c++-mode
+;;  (eval add-hook 'before-save-hook #'clang-format-buffer nil t)))
+
+(defun clang-format-save-hook-for-this-buffer ()
+  "Create a buffer local save hook."
+  (interactive)
+  (add-hook 'before-save-hook
+            (lambda ()
+	      (message "running clang-format")
+              (when (locate-dominating-file "." ".clang-format")
+                (clang-format-buffer))
+              ;; Continue to save.
+              nil)
+            nil
+            ;; Buffer local hook.
+            t))
+
+(use-package clang-format
+  :config
+)
+(require 'clang-format)
+
+;; On ubuntu:
+;;   # snap install universal-ctags
+;; Gnu Global uses ctags (universal-ctags)
+;;   # apt install global
+;;   $ pip install pygments
+(use-package ggtags
+  :config
+  (add-hook 'c-mode-common-hook
+          (lambda ()
+            (when (derived-mode-p 'c-mode 'c++-mode 'java-mode)
+              (ggtags-mode 1))))
+  )
+  
+
+(use-package magit
+  :config
+  (evil-global-set-key 'normal (kbd "SPC v") 'consult-buffer)
+  )
 (use-package solarized-theme
   :config
   (load-theme 'solarized-light t))
 
+(use-package lsp-mode
+  :init
+  (setq lsp-keymap-prefix "C-c l")
+  ;;(setq lsp-clangd-binary-path "/usr/bin/clangd")
+  (setq lsp-clangd-binary-path "lsp-clients-clangd-args")
+  (setq lsp-log-io t)
+  (setq lsp-clients-clangd-args '("--compile-commands-dir=/home/lundkhe/work/vihalp/1846/profile_linux_gcc8_preinstalled_debug"))
+  :hook (
+         (c++-mode . lsp)
+	 )
+  :commands lsp)
 
-(use-package eglot)
+;;(use-package eglot
+;;  :config
+;;  (setq eglot-connect-timeout 60)
+;;  (add-to-list 'eglot-server-programs
+;;	       '(c++-mode . ("clangd"
+;;			     "-log=verbose"
+;;                           "-j=4")))
+;;  
+;; (add-hook 'c++-mode-hook 'eglot-ensure))
+
 (use-package project) ;; For eglot
-(use-package projectile
-  :hook (prog-mode))
 (use-package ag)
 (use-package rust-mode)
 
+(use-package xterm-color
+  :config
+  (setq compilation-environment '("TERM=xterm-256color"))
+  (defun my/advice-compilation-filter (f proc string)
+    (funcall f proc (xterm-color-filter string)))
+  (advice-add 'compilation-filter :around #'my/advice-compilation-filter))
+(use-package realgud)
+(use-package rust-mode)
+(use-package cmake-mode)
+(use-package yaml-mode)
 
 ;;------------------------------------------------------------------------------
 ;; Misc
 ;;------------------------------------------------------------------------------
-(eval-after-load "term"
-  '(define-key term-raw-map (kbd "C-c C-y") 'term-paste))
 
+(global-set-key (kbd "<mouse-7>") #'(lambda ()
+                                     (interactive)
+                                     (scroll-left 7)))
+(global-set-key (kbd "<mouse-6>") #'(lambda ()
+                                     (interactive)
+                                     (scroll-right 7)))
+
+(use-package multi-term)
 (use-package hideshow 
   :config
   (add-to-list 'hs-special-modes-alist
@@ -270,3 +376,36 @@
 		 "<!--"
 		 sgml-skip-tag-forward
 		 nil)))
+
+(require 'ansi-color)
+(defun display-ansi-colors ()
+  (interactive)
+  (ansi-color-apply-on-region (point-min) (point-max)))
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(safe-local-variable-values
+   '((eval add-hook 'before-save-hook #'clang-format-buffer nil t)))
+ '(warning-suppress-log-types '(((defvaralias losing-value woman-topic-history))))
+ '(warning-suppress-types '(((defvaralias losing-value woman-topic-history)))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
+
+(use-package dired-hacks-utils)
+(use-package dired-subtree
+  :bind (:map dired-mode-map
+	 ("b" . dired-subtree-toggle)
+         ))
+
+(require 'dired-subtree)
+
+(recentf-mode 1)
+(setq recentf-max-menu-items 100)
+(setq recentf-max-saved-items 100)
+(run-at-time nil (* 5 60) 'recentf-save-list)
