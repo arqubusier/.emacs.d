@@ -67,22 +67,59 @@
 ;;------------------------------------------------------------------------------
 (add-hook 'org-mode-hook #'(lambda () (setq fill-column 80)))
 (add-hook 'org-mode-hook 'turn-on-auto-fill)
+(add-hook 'org-mode-hook 'org-display-inline-images)
+(setq org-startup-with-inline-images t)
+
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((dot . t)))
+  
+(use-package org-download
+  :config
+  (add-hook 'dired-mode-hook 'org-download-enable))
+
+(defun my-org-screenshot ()
+  "Take a screenshot into a time stamped unique-named file in the
+same directory as the org-buffer and insert a link to this file."
+  (interactive)
+  (setq filename
+        (concat
+         (make-temp-name
+          (concat (buffer-file-name)
+                  "_"
+                  (format-time-string "%Y%m%d_%H%M%S_")) ) ".png"))
+  (call-process "import" nil nil nil filename)
+  (insert (concat "[[" filename "]]"))
+  (org-display-inline-images))
+
+(use-package sqlite3)
+(use-package emacsql)
+(use-package emacsql-sqlite3)
+(use-package emacsql-sqlite)
 
 (use-package org-roam
-  :init
-  (setq org-roam-v2-ack t)
-  (mkdir "~/roam-notes" t)
-  (setq org-roam-directory (file-truename "~/roam-notes"))
+  :ensure t
+  :custom
+  (org-roam-directory (file-truename "~/roam-notes"))
   :bind (("C-c n l" . org-roam-buffer-toggle)
 	 ("C-c n f" . org-roam-node-find)
 	 ("C-c n i" . org-roam-node-insert))
   :config
-  (org-roam-setup)
+  (setq org-roam-node-display-template (concat "${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
   (org-roam-db-autosync-mode)
+
   (evil-global-set-key 'normal (kbd "SPC n f") 'org-roam-node-find)
   (evil-global-set-key 'normal (kbd "SPC n i") 'org-roam-node-insert)
   )
-(require 'org-roam)
+
+(use-package org-journal
+  :config
+  (evil-global-set-key 'normal (kbd "SPC n d") 'org-journal-new-entry)
+  (evil-global-set-key 'normal (kbd "SPC n j") 'org-journal-next-entry)
+  (evil-global-set-key 'normal (kbd "SPC n k") 'org-journal-previous-entry)
+  (evil-global-set-key 'normal (kbd "SPC n s") 'org-journal-search-entry)
+  )
+
 
 ;;------------------------------------------------------------------------------
 ;; completion
@@ -220,6 +257,9 @@
   (evil-global-set-key 'normal (kbd "SPC d") 'consult-find)
   (evil-global-set-key 'normal (kbd "SPC g") 'consult-grep)
   (evil-global-set-key 'normal (kbd "SPC r") 'consult-ripgrep)
+  (evil-global-set-key 'normal (kbd "SPC x c") #'project-compile)
+  (evil-global-set-key 'normal (kbd "SPC x b") #'conan-build)
+  (evil-global-set-key 'normal (kbd "SPC x i") #'conan-install)
 )
 (require 'consult)
 
@@ -228,9 +268,9 @@
 
 (use-package corfu
   ;; Optional customizations
-  ;; :custom
-  ;; (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
-  ;; (corfu-auto t)                 ;; Enable auto completion
+  :custom
+  (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
+  (corfu-auto t)                 ;; Enable auto completion
   ;; (corfu-separator ?\s)          ;; Orderless field separator
   ;; (corfu-quit-at-boundary nil)   ;; Never quit at completion boundary
   ;; (corfu-quit-no-match nil)      ;; Never quit, even if there is no match
@@ -241,14 +281,24 @@
   ;; (corfu-scroll-margin 5)        ;; Use scroll margin
 
   ;; You may want to enable Corfu only for certain modes.
-  ;; :hook ((prog-mode . corfu-mode)
-  ;;        (shell-mode . corfu-mode)
-  ;;        (eshell-mode . corfu-mode))
+  :config
+  :hook ((python-mode . corfu-mode)
+	 (c-mode . corfu-mode)
+	 (lisp-mode . corfu-mode)
+	 (c++-mode . corfu-mode)
+	 )
 
   ;; Recommended: Enable Corfu globally.
   ;; This is recommended since dabbrev can be used globally (M-/).
   :init
-  (corfu-global-mode))
+  (corfu-global-mode)
+  :bind
+  (:map corfu-map
+        ("TAB" . corfu-next)
+        ([tab] . corfu-next)
+        ("S-TAB" . corfu-previous)
+        ([backtab] . corfu-previous))
+  )
 
 ;; A few more useful configurations...
 (use-package emacs
@@ -263,21 +313,69 @@
 
   ;; Enable indentation+completion using the TAB key.
   ;; `completion-at-point' is often bound to M-TAB.
-  (setq tab-always-indent 'complete))
+  (setq tab-always-indent 'complete)
+  ;; First indent then complete
+  ;; Force tab to use emacs generic tab function instead of language mode specific
+  ;; tab functions
+  (global-set-key (kbd "<f5>")
+		  #'(lambda()
+		      (interactive)
+		      (pop-to-buffer "*terminal<1>*")))
+  (global-set-key (kbd "<f6>")
+		  #'(lambda()
+		      (interactive)
+		      (pop-to-buffer "*terminal<2>*")))
+  (global-set-key (kbd "<f7>")
+		  #'(lambda()
+		      (interactive)
+		      (pop-to-buffer "*terminal<3>*")))
+  (global-set-key (kbd "<f8>")
+		  #'(lambda()
+		      (interactive)
+		      (pop-to-buffer "*terminal<4>*")))
+  (global-set-key (kbd "<f9>")
+		  #'(lambda()
+		      (interactive)
+		      (pop-to-buffer "*compilation*")))
+  :bind (
+	 :map c-mode-base-map
+	 ("TAB" . indent-for-tab-command)
+	 )
+  )
 
 
 
 ;;------------------------------------------------------------------------------
 ;; Coding
 ;;------------------------------------------------------------------------------
+(add-hook 'prog-mode-hook #'yas-minor-mode-on)
+(use-package flyspell
+  :config
+(add-hook 'prog-mode-hook #'flyspell-prog-mode)
+(add-hook 'org-mode-hook 'turn-on-flyspell)
+  )
+(require 'flyspell)
 
+(defun my-c-common-mode-hook ()
+ (define-key evil-normal-state-local-map
+ (kbd "SPC o") 'ff-find-other-file)
+ (setq indent-tabs-mode nil)
+ (setq display-fill-column-indicator-column 120)
+ (display-fill-column-indicator-mode)
+  )
+(use-package google-c-style)
+(setq c-default-style "google")
+(add-hook 'c-mode-common-hook
+	  'my-c-common-mode-hook
+	  'google-set-c-style
+	  'google-make-newline-indent
+	  )
 
 ;; Add this to .dir-locals.el of your project
 ;; ((c++-mode
 ;;  (eval add-hook 'before-save-hook #'clang-format-buffer nil t)))
 
 (defun clang-format-save-hook-for-this-buffer ()
-  "Create a buffer local save hook."
   (interactive)
   (add-hook 'before-save-hook
             (lambda ()
@@ -309,25 +407,41 @@
   )
   
 
-(use-package magit
-  :config
-  (evil-global-set-key 'normal (kbd "SPC v") 'consult-buffer)
-  )
+(use-package magit)
 (use-package solarized-theme
   :config
   (load-theme 'solarized-light t))
 
+;; Symlink compile-commands.json to project root
 (use-package lsp-mode
   :init
   (setq lsp-keymap-prefix "C-c l")
   ;;(setq lsp-clangd-binary-path "/usr/bin/clangd")
   (setq lsp-clangd-binary-path "lsp-clients-clangd-args")
   (setq lsp-log-io t)
-  (setq lsp-clients-clangd-args '("--compile-commands-dir=/home/lundkhe/work/vihalp/1846/profile_linux_gcc8_preinstalled_debug"))
+  ;;(setq lsp-clients-clangd-args '("--compile-commands-dir=profile_linux_gcc8_preinstalled_debug"))
   :hook (
          (c++-mode . lsp)
 	 )
-  :commands lsp)
+  :commands lsp
+  :config
+  (org-add-hook 'lsp-mode-hook
+		(lambda ()
+		  (define-key evil-normal-state-local-map
+                    (kbd "SPC l d") 'lsp-find-definition)
+		  (define-key evil-normal-state-local-map
+		    (kbd "SPC l r") 'lsp-find-references)
+		  ))
+  )
+(use-package lsp-ui
+  :config
+  (setq lsp-ui-doc-enable t)
+  (setq lsp-ui-doc-show-with-cursor t)
+  (setq lsp-ui-doc-show-with-mouse t)
+  )
+
+(use-package treemacs)
+(use-package lsp-treemacs)
 
 ;;(use-package eglot
 ;;  :config
@@ -353,10 +467,36 @@
 (use-package rust-mode)
 (use-package cmake-mode)
 (use-package yaml-mode)
+(use-package yasnippet
+  :config
+(setq yas-snippet-dirs '( "~/.emacs.d/snippets" ))
+(yas-reload-all)
+  )
 
+(defun compilation-done-notify (buffer desc)
+  (notifications-notify
+   :title "Compilation Done!"
+   :body (message "%s %s" buffer desc)
+   )
+  )
+(add-hook 'compilation-finish-functions #'compilation-done-notify)
 ;;------------------------------------------------------------------------------
 ;; Misc
 ;;------------------------------------------------------------------------------
+(global-visual-line-mode 1)
+;; (setq desktop-path '("~/.emacs.d/"))
+;; (setq desktop-dirname "~/.emacs.d/")
+;; (setq desktop-base-file-name "emacs-desktop")
+;; (desktop-save-mode)
+;; (setq desktop-buffers-not-to-save
+;;      (concat "\\("
+;;              "^nn\\.a[0-9]+\\|\\.log\\|(ftp)\\|^tags\\|^TAGS"
+;;              "\\|\\.emacs.*\\|\\.bbdb"
+;;         "\\)$"))
+;; (add-to-list 'desktop-modes-not-to-save 'dired-mode)
+;; (add-to-list 'desktop-modes-not-to-save 'Info-mode)
+;; (add-to-list 'desktop-modes-not-to-save 'info-lookup-mode)
+;; (add-to-list 'desktop-modes-not-to-save 'fundamental-mode)
 
 (global-set-key (kbd "<mouse-7>") #'(lambda ()
                                      (interactive)
@@ -365,7 +505,67 @@
                                      (interactive)
                                      (scroll-right 7)))
 
-(use-package multi-term)
+(use-package visual-fill-column
+  :config
+ (setq visual-fill-column-width 120)
+ (setq-default visual-fill-column-center-text t)
+ )
+
+(defun my/org-present-start ()
+  (menu-bar-mode 0)
+  (tool-bar-mode 0)
+  (scroll-bar-mode 0)
+  (org-display-inline-images)
+  (org-hide-block-all)
+  ;; Center the presentation and wrap lines
+  (visual-fill-column-mode 1)
+  (visual-line-mode 1))
+
+(defun my/org-present-end ()
+  (menu-bar-mode 1)
+  (tool-bar-mode 1)
+  (scroll-bar-mode 1)
+  (org-show-block-all)
+  ;; Stop centering the document
+  (visual-fill-column-mode 0)
+  (visual-line-mode 0))
+
+(use-package org-present
+:config
+  (add-hook 'org-present-mode-hook
+            (lambda ()
+              (define-key evil-normal-state-local-map
+                (kbd "SPC n") 'org-present-next)
+              (define-key evil-normal-state-local-map
+		(kbd "SPC p") 'org-present-prev)
+              (define-key evil-normal-state-local-map
+		(kbd "SPC q") 'org-present-quit)
+	      ))
+  (add-hook 'org-present-mode-hook 'my/org-present-start)
+  (add-hook 'org-present-mode-quit-hook 'my/org-present-end)
+  )
+
+(use-package smartparens)
+
+(setq term-buffer-maximum-size 20000) 
+(use-package multi-term
+  :config
+  (add-hook 'term-mode-hook
+            (lambda ()
+              (define-key evil-normal-state-local-map
+                (kbd "SPC l") 'term-line-mode)
+              (define-key evil-normal-state-local-map
+		(kbd "SPC c") 'term-char-mode)
+	    )))
+
+(require 'multi-term)
+
+(straight-use-package
+'(aweshell :type git :host github :repo "manateelazycat/aweshell"))
+(require 'aweshell)
+
+(use-package tramp)
+
 (use-package hideshow 
   :config
   (add-to-list 'hs-special-modes-alist
@@ -386,6 +586,16 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(bmkp-last-as-first-bookmark-file "~/.emacs.d/bookmarks")
+ '(display-buffer-alist
+   '(("\\(?:.*shell\\)\\|\\(?:\\*grep\\)\\|\\(?:\\*compilation\\*\\)\\|\\(?:\\*terminal<[0-9]+>\\*\\)" display-buffer-in-side-window
+      (side . bottom)
+      (slot . 0)
+      (window-height . 10))
+     ("\\*help\\*" display-buffer-in-side-window
+      (side . right)
+      (slot . 0)
+      (window-width . 80))))
  '(safe-local-variable-values
    '((eval add-hook 'before-save-hook #'clang-format-buffer nil t)))
  '(warning-suppress-log-types '(((defvaralias losing-value woman-topic-history))))
@@ -409,3 +619,85 @@
 (setq recentf-max-menu-items 100)
 (setq recentf-max-saved-items 100)
 (run-at-time nil (* 5 60) 'recentf-save-list)
+
+(use-package pikchr-mode)
+
+(defun show-image-dimensions-in-mode-line ()
+  (interactive)
+  (let* ((image-dimensions (image-size (image-get-display-property) :pixels))
+         (width (car image-dimensions))
+         (height (cdr image-dimensions)))
+    (setq mode-line-buffer-identification
+          (format "%s %dx%d" (propertized-buffer-identification "%12b") width height))))
+
+(add-hook 'image-mode-hook #'show-image-dimensions-in-mode-line)
+
+(setq make-backup-files nil)
+
+(use-package bookmark+
+  :config 
+  (evil-global-set-key 'normal (kbd "SPC x x") 'bookmark-jump)
+  (evil-global-set-key 'normal (kbd "SPC x s") 'bookmark-set)
+  (evil-global-set-key 'normal (kbd "SPC x l") 'bookmark-set)
+  (evil-global-set-key 'normal (kbd "SPC x t") 'bookmark-tag)
+  )
+
+(setq dired-mouse-drag-files t)
+
+(setq switch-to-buffer-obey-display-actions t)
+
+(use-package which-key)
+(require 'which-key)
+(which-key-mode)
+
+
+(require 'notifications)
+(use-package alert)
+(require 'alert)
+
+(use-package elfeed
+  :ensure t
+  :config
+  (setq elfeed-db-directory (expand-file-name "elfeed" user-emacs-directory)
+	elfeed-show-entry-switch 'display-buffer)
+  :bind
+  ("C-x w" . elfeed ))
+
+;; Used for configuration of elfeed using org-files
+(use-package elfeed-org
+  :ensure t
+  :config
+  (elfeed-org)
+  (setq rmh-elfeed-org-files (list "~/.emacs.d/elfeed.org")))
+
+;; sick
+
+(defun conan-build-default (profile)
+(format "euler devshell --commands='cd %s && conan build .. ; exit'" profile)
+    )
+(defun conan-install-default (profile)
+(format "euler devshell --commands='mkdir -p %s && cd %s &&  conan install -pr %s --update --build missing .. -e CMAKE_EXPORT_COMPILE_COMMANDS=ON ; exit'" profile profile profile))
+
+(defvar conan-build-command #'conan-build-default)
+(defvar conan-install-command #'conan-install-default)
+
+(defun conan-profiles ()
+ (split-string (shell-command-to-string "conan profile list")))
+
+(defun conan-build (arg)
+  (interactive
+   (list
+    (completing-read "conan profile " (conan-profiles))))
+  (message arg)
+  (let ((default-directory (vc-root-dir)))
+  (compile (funcall conan-build-command arg)))
+  )
+
+(defun conan-install (arg)
+  (interactive
+   (list
+    (completing-read "conan profile " (conan-profiles))))
+  (message arg)
+  (let ((default-directory (vc-root-dir)))
+  (compile (funcall conan-install-command arg)))
+  )
