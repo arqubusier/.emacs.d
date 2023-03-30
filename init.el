@@ -465,6 +465,8 @@ same directory as the org-buffer and insert a link to this file."
 
 (use-package project) ;; For eglot
 (use-package ag)
+(use-package rust-mode)
+
 (use-package xterm-color
   :config
   (setq compilation-environment '("TERM=xterm-256color"))
