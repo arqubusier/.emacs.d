@@ -12,6 +12,7 @@
 ;;
 ;; Then try starting emacs again
 ;;------------------------------------------------------------------------------
+(defvar native-comp-deferred-compilation-deny-list nil) 
 (defvar bootstrap-version)
 (let ((bootstrap-file
        (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
@@ -291,7 +292,7 @@ same directory as the org-buffer and insert a link to this file."
   ;; Recommended: Enable Corfu globally.
   ;; This is recommended since dabbrev can be used globally (M-/).
   :init
-  (corfu-global-mode)
+  (global-corfu-mode)
   :bind
   (:map corfu-map
         ("TAB" . corfu-next)
@@ -337,10 +338,10 @@ same directory as the org-buffer and insert a link to this file."
 		  #'(lambda()
 		      (interactive)
 		      (pop-to-buffer "*compilation*")))
-  :bind (
-	 :map c-mode-base-map
-	 ("TAB" . indent-for-tab-command)
-	 )
+  ;;:bind (
+  ;;	 :map c-mode-base-map
+  ;;	 ("TAB" . indent-for-tab-command)
+  ;;	 )
   )
 
 
@@ -348,7 +349,18 @@ same directory as the org-buffer and insert a link to this file."
 ;;------------------------------------------------------------------------------
 ;; Coding
 ;;------------------------------------------------------------------------------
-(add-hook 'prog-mode-hook #'yas-minor-mode-on)
+(defun project-debug ()
+  (interactive)
+  (let ((default-directory (vc-root-dir)))
+  (realgud:gdb)
+  )
+  )
+
+(use-package flymake-diagnostic-at-point
+  :after flymake
+  :config
+  (add-hook 'flymake-mode-hook #'flymake-diagnostic-at-point-mode))
+
 (use-package flyspell
   :config
 (add-hook 'prog-mode-hook #'flyspell-prog-mode)
@@ -362,14 +374,12 @@ same directory as the org-buffer and insert a link to this file."
  (setq indent-tabs-mode nil)
  (setq display-fill-column-indicator-column 120)
  (display-fill-column-indicator-mode)
+ (google-set-c-style)
+ (google-make-newline-indent)
   )
 (use-package google-c-style)
 (setq c-default-style "google")
-(add-hook 'c-mode-common-hook
-	  'my-c-common-mode-hook
-	  'google-set-c-style
-	  'google-make-newline-indent
-	  )
+(add-hook 'c-mode-common-hook #'my-c-common-mode-hook)
 
 ;; Add this to .dir-locals.el of your project
 ;; ((c++-mode
@@ -467,6 +477,7 @@ same directory as the org-buffer and insert a link to this file."
 (use-package yaml-mode)
 (use-package yasnippet
   :config
+(add-hook 'prog-mode-hook #'yas-minor-mode)
 (setq yas-snippet-dirs '( "~/.emacs.d/snippets" ))
 (yas-reload-all)
   )
@@ -595,7 +606,13 @@ same directory as the org-buffer and insert a link to this file."
       (slot . 0)
       (window-width . 80))))
  '(safe-local-variable-values
-   '((eval add-hook 'before-save-hook #'clang-format-buffer nil t)))
+   '((eval setq-local conan-install-command #'conan-install-poetry)
+     (eval setq-local conan-build-command #'conan-build-poetry)
+     (eval setq-local conan-build-format
+	   (lambda "build with conan + poetry"
+	     (profile)
+	     (message "hej")))
+     (eval add-hook 'before-save-hook #'clang-format-buffer nil t)))
  '(warning-suppress-log-types '((comp))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
@@ -647,6 +664,10 @@ same directory as the org-buffer and insert a link to this file."
 (require 'which-key)
 (which-key-mode)
 
+(use-package markdown-mode
+  :config
+  (setq makrdown-command "/usr/bin/pandoc"))
+
 
 (require 'notifications)
 (use-package alert)
@@ -667,7 +688,16 @@ same directory as the org-buffer and insert a link to this file."
   (elfeed-org)
   (setq rmh-elfeed-org-files (list "~/.emacs.d/elfeed.org")))
 
+(use-package rg)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; sick
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun conan-build-poetry (profile)
+(format "cd %s && poetry run conan build .. " profile)
+    )
+(defun conan-install-poetry (profile)
+    (format "mkdir -p %s && cd %s && poetry run conan install -pr %s --update --build missing ..  -e CMAKE_EXPORT_COMPILE_COMMANDS=ON -o create_and_run_unit_tests=True" profile profile profile))
 
 (defun conan-build-default (profile)
 (format "euler devshell --commands='cd %s && conan build .. ; exit'" profile)
