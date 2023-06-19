@@ -145,7 +145,6 @@ same directory as the org-buffer and insert a link to this file."
   :init
   (marginalia-mode))
 
-;; Example configuration for Consult
 (use-package consult
   ;; Replace bindings. Lazily loaded due by `use-package'.
   :bind (;; C-c bindings (mode-specific-map)
@@ -213,6 +212,38 @@ same directory as the org-buffer and insert a link to this file."
   (evil-global-set-key 'normal (kbd "SPC x i") #'conan-install)
 )
 (require 'consult)
+
+(use-package embark
+  :ensure t
+
+  :bind
+  (("C-." . embark-act)         ;; pick some comfortable binding
+   ("C-;" . embark-dwim)        ;; good alternative: M-.
+   ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
+
+  :init
+
+  ;; Optionally replace the key help with a completing-read interface
+  (setq prefix-help-command #'embark-prefix-help-command)
+
+  ;; Show the Embark target at point via Eldoc.  You may adjust the Eldoc
+  ;; strategy, if you want to see the documentation from multiple providers.
+  (add-hook 'eldoc-documentation-functions #'embark-eldoc-first-target)
+  ;; (setq eldoc-documentation-strategy #'eldoc-documentation-compose-eagerly)
+
+  :config
+
+  ;; Hide the mode line of the Embark live/completions buffers
+  (add-to-list 'display-buffer-alist
+               '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+                 nil
+                 (window-parameters (mode-line-format . none)))))
+
+;; Consult users will also want the embark-consult package.
+(use-package embark-consult
+  :ensure t ; only need to install it, embark loads it after consult if found
+  :hook
+  (embark-collect-mode . consult-preview-at-point-mode))
 
 (use-package orderless
   :custom (completion-styles '(orderless)))
@@ -416,6 +447,7 @@ same directory as the org-buffer and insert a link to this file."
 (use-package project) ;; For eglot
 (use-package ag)
 (use-package rust-mode)
+(use-package lua-mode)
 
 (use-package xterm-color
   :config
@@ -548,6 +580,90 @@ same directory as the org-buffer and insert a link to this file."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(bmkp-last-as-first-bookmark-file "~/.emacs.d/bookmarks")
+ '(connection-local-criteria-alist
+   '(((:application tramp :protocol "flatpak")
+      tramp-container-connection-local-default-flatpak-profile)
+     ((:application tramp)
+      tramp-connection-local-default-system-profile tramp-connection-local-default-shell-profile)
+     ((:application eshell)
+      eshell-connection-default-profile)))
+ '(connection-local-profile-alist
+   '((tramp-container-connection-local-default-flatpak-profile
+      (tramp-remote-path "/app/bin" tramp-default-remote-path "/bin" "/usr/bin" "/sbin" "/usr/sbin" "/usr/local/bin" "/usr/local/sbin" "/local/bin" "/local/freeware/bin" "/local/gnu/bin" "/usr/freeware/bin" "/usr/pkg/bin" "/usr/contrib/bin" "/opt/bin" "/opt/sbin" "/opt/local/bin"))
+     (tramp-connection-local-darwin-ps-profile
+      (tramp-process-attributes-ps-args "-acxww" "-o" "pid,uid,user,gid,comm=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" "-o" "state=abcde" "-o" "ppid,pgid,sess,tty,tpgid,minflt,majflt,time,pri,nice,vsz,rss,etime,pcpu,pmem,args")
+      (tramp-process-attributes-ps-format
+       (pid . number)
+       (euid . number)
+       (user . string)
+       (egid . number)
+       (comm . 52)
+       (state . 5)
+       (ppid . number)
+       (pgrp . number)
+       (sess . number)
+       (ttname . string)
+       (tpgid . number)
+       (minflt . number)
+       (majflt . number)
+       (time . tramp-ps-time)
+       (pri . number)
+       (nice . number)
+       (vsize . number)
+       (rss . number)
+       (etime . tramp-ps-time)
+       (pcpu . number)
+       (pmem . number)
+       (args)))
+     (tramp-connection-local-busybox-ps-profile
+      (tramp-process-attributes-ps-args "-o" "pid,user,group,comm=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" "-o" "stat=abcde" "-o" "ppid,pgid,tty,time,nice,etime,args")
+      (tramp-process-attributes-ps-format
+       (pid . number)
+       (user . string)
+       (group . string)
+       (comm . 52)
+       (state . 5)
+       (ppid . number)
+       (pgrp . number)
+       (ttname . string)
+       (time . tramp-ps-time)
+       (nice . number)
+       (etime . tramp-ps-time)
+       (args)))
+     (tramp-connection-local-bsd-ps-profile
+      (tramp-process-attributes-ps-args "-acxww" "-o" "pid,euid,user,egid,egroup,comm=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" "-o" "state,ppid,pgid,sid,tty,tpgid,minflt,majflt,time,pri,nice,vsz,rss,etimes,pcpu,pmem,args")
+      (tramp-process-attributes-ps-format
+       (pid . number)
+       (euid . number)
+       (user . string)
+       (egid . number)
+       (group . string)
+       (comm . 52)
+       (state . string)
+       (ppid . number)
+       (pgrp . number)
+       (sess . number)
+       (ttname . string)
+       (tpgid . number)
+       (minflt . number)
+       (majflt . number)
+       (time . tramp-ps-time)
+       (pri . number)
+       (nice . number)
+       (vsize . number)
+       (rss . number)
+       (etime . number)
+       (pcpu . number)
+       (pmem . number)
+       (args)))
+     (tramp-connection-local-default-shell-profile
+      (shell-file-name . "/bin/sh")
+      (shell-command-switch . "-c"))
+     (tramp-connection-local-default-system-profile
+      (path-separator . ":")
+      (null-device . "/dev/null"))
+     (eshell-connection-default-profile
+      (eshell-path-env-list))))
  '(display-buffer-alist
    '(("\\(?:.*shell\\)\\|\\(?:\\*grep\\)\\|\\(?:\\*compilation\\*\\)\\|\\(?:\\*terminal<[0-9]+>\\*\\)" display-buffer-in-side-window
       (side . bottom)
@@ -558,7 +674,9 @@ same directory as the org-buffer and insert a link to this file."
       (slot . 0)
       (window-width . 80))))
  '(safe-local-variable-values
-   '((eval setq-local conan-install-command #'conan-install-poetry)
+   '((eval setq-local conan-install-command #'conan-install-default)
+     (eval setq-local conan-build-command #'conan-build-default)
+     (eval setq-local conan-install-command #'conan-install-poetry)
      (eval setq-local conan-build-command #'conan-build-poetry)
      (eval setq-local conan-build-format
 	   (lambda "build with conan + poetry"
@@ -656,6 +774,9 @@ same directory as the org-buffer and insert a link to this file."
     )
 (defun conan-install-default (profile)
 (format "euler devshell --commands='mkdir -p %s && cd %s &&  conan install -pr %s --update --build missing .. -e CMAKE_EXPORT_COMPILE_COMMANDS=ON ; exit'" profile profile profile))
+
+(defun conan-install-lock (profile)
+(format "euler devshell --commands='mkdir -p %s && cd %s &&  conan install -pr %s --update --build missing .. --lockfile=../config/base.lock ; exit'" profile profile profile))
 
 (defvar conan-build-command #'conan-build-default)
 (defvar conan-install-command #'conan-install-default)
