@@ -38,8 +38,6 @@
 (require 'use-package-ensure)
 (setq use-package-always-ensure t)
 
-
-
 ;;
 ;; evil
 ;;
@@ -228,7 +226,7 @@ same directory as the org-buffer and insert a link to this file."
 
   ;; Show the Embark target at point via Eldoc.  You may adjust the Eldoc
   ;; strategy, if you want to see the documentation from multiple providers.
-  (add-hook 'eldoc-documentation-functions #'embark-eldoc-first-target)
+  ;;(add-hook 'eldoc-documentation-functions #'embark-eldoc-first-target)
   ;; (setq eldoc-documentation-strategy #'eldoc-documentation-compose-eagerly)
 
   :config
@@ -302,19 +300,19 @@ same directory as the org-buffer and insert a link to this file."
   (global-set-key (kbd "<f5>")
 		  #'(lambda()
 		      (interactive)
-		      (pop-to-buffer "*terminal<1>*")))
+		      (pop-to-buffer "*vterminal<1>*")))
   (global-set-key (kbd "<f6>")
 		  #'(lambda()
 		      (interactive)
-		      (pop-to-buffer "*terminal<2>*")))
+		      (pop-to-buffer "*vterminal<2>*")))
   (global-set-key (kbd "<f7>")
 		  #'(lambda()
 		      (interactive)
-		      (pop-to-buffer "*terminal<3>*")))
+		      (pop-to-buffer "*vterminal<3>*")))
   (global-set-key (kbd "<f8>")
 		  #'(lambda()
 		      (interactive)
-		      (pop-to-buffer "*terminal<4>*")))
+		      (pop-to-buffer "*vterminal<4>*")))
   (global-set-key (kbd "<f9>")
 		  #'(lambda()
 		      (interactive)
@@ -326,10 +324,32 @@ same directory as the org-buffer and insert a link to this file."
   )
 
 
+;;------------------------------------------------------------------------------
+;; terminal
+;;------------------------------------------------------------------------------
+(use-package vterm
+  :config
+  (define-key vterm-mode-map (kbd "<C-backspace>")
+    (lambda () (interactive) (vterm-send-key (kbd "C-w"))))
+  (define-key vterm-mode-map (kbd "<f3>") nil)
+  (define-key vterm-mode-map (kbd "<f4>") nil)
+  (define-key vterm-mode-map (kbd "<f5>") nil)
+  (define-key vterm-mode-map (kbd "<f6>") nil)
+  (define-key vterm-mode-map (kbd "<f7>") nil)
+  (define-key vterm-mode-map (kbd "<f8>") nil)
+  (setq vterm-shell "fish")
+  )
+(use-package multi-vterm)
+(use-package vterm-toggle
+  :config
+  (global-set-key (kbd "<f3>") #'vterm-toggle)
+  (global-set-key (kbd "<f4>") #'vterm-toggle-insert-cd)
+  )
 
 ;;------------------------------------------------------------------------------
 ;; Coding
 ;;------------------------------------------------------------------------------
+(use-package sx)
 (defun project-debug ()
   (interactive)
   (let ((default-directory (vc-root-dir)))
@@ -665,7 +685,7 @@ same directory as the org-buffer and insert a link to this file."
      (eshell-connection-default-profile
       (eshell-path-env-list))))
  '(display-buffer-alist
-   '(("\\(?:.*shell\\)\\|\\(?:\\*grep\\)\\|\\(?:\\*compilation\\*\\)\\|\\(?:\\*terminal<[0-9]+>\\*\\)" display-buffer-in-side-window
+   '(("\\(?:.*shell\\)\\|\\(?:\\*grep\\)\\|\\(?:\\*compilation\\*\\)\\|\\(?:\\*vterminal<[0-9]+>\\*\\)" display-buffer-in-side-window
       (side . bottom)
       (slot . 0)
       (window-height . 10))
@@ -674,7 +694,9 @@ same directory as the org-buffer and insert a link to this file."
       (slot . 0)
       (window-width . 80))))
  '(safe-local-variable-values
-   '((eval setq-local conan-install-command #'conan-install-default)
+   '((eval setq-local conan-install-command #'conan-install-poetry2)
+     (eval setq-local conan-install-command #'conan-install-lock)
+     (eval setq-local conan-install-command #'conan-install-default)
      (eval setq-local conan-build-command #'conan-build-default)
      (eval setq-local conan-install-command #'conan-install-poetry)
      (eval setq-local conan-build-command #'conan-build-poetry)
@@ -763,11 +785,30 @@ same directory as the org-buffer and insert a link to this file."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; sick
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(setenv "PATH"
+        (concat
+         "/home/lundkhe/.euler-cli/bin" path-separator
+         (getenv "PATH")))
+
 (defun conan-build-poetry (profile)
 (format "cd %s && poetry run conan build .. " profile)
     )
+
+(defun conan-build-plain (profile)
+(format "cd %s && conan build .. " profile)
+    )
+
+(defun conan-install-lock (profile)
+    (format "mkdir -p %s && cd %s &&  poetry run conan install .. --lockfile conan.lock --build missing .. -e CMAKE_EXPORT_COMPILE_COMMANDS=ON" profile profile))
+
 (defun conan-install-poetry (profile)
     (format "mkdir -p %s && cd %s && poetry run conan install -pr %s --update --build missing ..  -e CMAKE_EXPORT_COMPILE_COMMANDS=ON -o create_and_run_unit_tests=True" profile profile profile))
+
+(defun conan-install-poetry2 (profile)
+    (format "mkdir -p %s && cd %s && poetry run conan install -pr %s --update --build missing ..  -e CMAKE_EXPORT_COMPILE_COMMANDS=ON" profile profile profile))
+
+(defun conan-install-plain (profile)
+    (format "mkdir -p %s && cd %s && conan install -pr %s --update --build missing ..  -e CMAKE_EXPORT_COMPILE_COMMANDS=ON -o create_and_run_unit_tests=True" profile profile profile))
 
 (defun conan-build-default (profile)
 (format "euler devshell --commands='cd %s && conan build .. ; exit'" profile)
@@ -778,8 +819,8 @@ same directory as the org-buffer and insert a link to this file."
 (defun conan-install-lock (profile)
 (format "euler devshell --commands='mkdir -p %s && cd %s &&  conan install -pr %s --update --build missing .. --lockfile=../config/base.lock ; exit'" profile profile profile))
 
-(defvar conan-build-command #'conan-build-default)
-(defvar conan-install-command #'conan-install-default)
+(defvar conan-build-command #'conan-build-plain)
+(defvar conan-install-command #'conan-install-plain)
 
 (defun conan-profiles ()
  (split-string (shell-command-to-string "conan profile list")))
