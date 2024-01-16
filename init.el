@@ -280,6 +280,56 @@ same directory as the org-buffer and insert a link to this file."
         ([backtab] . corfu-previous))
   )
 
+(defun my-func-one (arg1 &optional arg2 arg3)
+  (interactive "nasdf ")
+  (message "%s %s %s" arg1 arg2 arg3))
+
+(defun open-vterm (number)
+  "Switch to a numbered vterm buffer, creating it if missing."
+  (interactive "nterminal number: ")
+  (let ((buf-name (concat "*vterminal - " (number-to-string number) "*")))
+    (if (equal (get-buffer buf-name) nil)
+      (progn
+       (pop-to-buffer (multi-vterm))
+       (multi-vterm-rename-buffer (number-to-string number))
+      )
+      (pop-to-buffer buf-name)
+      )
+    )
+  )
+
+(require 'python)
+
+(defvar last-toggle-buffer nil
+  "buffer to jump back to when using `toggle-buffer'")
+
+(defvar toggleable-buffers '("*Help*" "*scratch*" "*compilation*")
+  "buffer to jump back to when using `toggle-buffer'")
+
+(defun toggle-buffer (target-name)
+  "Switch to a buffer, if already on this buffer switch back to the previous buffer."
+  (interactive "buffer to switch to:")
+  (if (string= (buffer-name) target-name)
+    ;; switch back to the last buffer, but only if it
+     ;; still exists.
+      (progn
+	;;(message last-toggle-buffer)
+	(if (buffer-live-p last-toggle-buffer)
+	   (progn
+	     (quit-window)
+             (pop-to-buffer last-toggle-buffer)
+	    )
+	  ;; buffer's dead; clear the variable.
+	  (setq last-toggle-buffer nil)))
+    ;; Go to the target buffer
+    (progn
+       (if (not (member (buffer-name) toggleable-buffers))
+	(setq last-toggle-buffer (current-buffer))
+	)
+	(pop-to-buffer target-name)
+	)
+    ))
+
 ;; A few more useful configurations...
 (use-package emacs
   :init
@@ -300,23 +350,35 @@ same directory as the org-buffer and insert a link to this file."
   (global-set-key (kbd "<f5>")
 		  #'(lambda()
 		      (interactive)
-		      (pop-to-buffer "*vterminal<1>*")))
+		      (open-vterm 1)))
   (global-set-key (kbd "<f6>")
 		  #'(lambda()
 		      (interactive)
-		      (pop-to-buffer "*vterminal<2>*")))
+		      (open-vterm 2)))
   (global-set-key (kbd "<f7>")
 		  #'(lambda()
 		      (interactive)
-		      (pop-to-buffer "*vterminal<3>*")))
+		      (open-vterm 3)))
   (global-set-key (kbd "<f8>")
 		  #'(lambda()
 		      (interactive)
-		      (pop-to-buffer "*vterminal<4>*")))
+		      (open-vterm 4)))
   (global-set-key (kbd "<f9>")
 		  #'(lambda()
 		      (interactive)
-		      (pop-to-buffer "*compilation*")))
+		      (open-vterm 5)))
+  (global-set-key (kbd "<f10>")
+		  #'(lambda()
+		      (interactive)
+		      (toggle-buffer "*compilation*")))
+  (global-set-key (kbd "<f11>")
+		  #'(lambda()
+		      (interactive)
+		      (toggle-buffer "*Help*")))
+  (global-set-key (kbd "<f12>")
+		  #'(lambda()
+		      (interactive)
+		      (toggle-buffer "*scratch*")))
   ;;:bind (
   ;;	 :map c-mode-base-map
   ;;	 ("TAB" . indent-for-tab-command)
@@ -337,6 +399,40 @@ same directory as the org-buffer and insert a link to this file."
   (define-key vterm-mode-map (kbd "<f6>") nil)
   (define-key vterm-mode-map (kbd "<f7>") nil)
   (define-key vterm-mode-map (kbd "<f8>") nil)
+  (define-key vterm-mode-map (kbd "<f9>") nil)
+  (add-hook 'vterm-mode-hook
+	    (lambda ()
+	      (setq-local evil-insert-state-cursor 'box)
+	      (evil-insert-state)))
+  (define-key vterm-mode-map [return]                      #'vterm-send-return)
+  
+  (setq vterm-keymap-exceptions nil)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-e")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-f")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-a")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-v")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-b")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-w")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-u")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-d")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-n")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-m")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-p")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-j")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-k")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-r")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-t")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-g")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-c")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-SPC")    #'vterm--self-insert)
+  (evil-define-key 'normal vterm-mode-map (kbd "C-d")      #'vterm--self-insert)
+  (evil-define-key 'normal vterm-mode-map (kbd ",c")       #'multi-vterm)
+  (evil-define-key 'normal vterm-mode-map (kbd ",n")       #'multi-vterm-next)
+  (evil-define-key 'normal vterm-mode-map (kbd ",p")       #'multi-vterm-prev)
+  (evil-define-key 'normal vterm-mode-map (kbd "i")        #'evil-insert-resume)
+  (evil-define-key 'normal vterm-mode-map (kbd "o")        #'evil-insert-resume)
+  (evil-define-key 'normal vterm-mode-map (kbd "<return>") #'evil-insert-resume)
+
   (setq vterm-shell "fish")
   )
 (use-package multi-vterm)
@@ -496,6 +592,10 @@ same directory as the org-buffer and insert a link to this file."
 ;;------------------------------------------------------------------------------
 ;; Misc
 ;;------------------------------------------------------------------------------
+(use-package golden-ratio
+  :config
+  (golden-ratio-mode 1))
+
 (global-visual-line-mode 1)
 ;; (setq desktop-path '("~/.emacs.d/"))
 ;; (setq desktop-dirname "~/.emacs.d/")
@@ -685,7 +785,7 @@ same directory as the org-buffer and insert a link to this file."
      (eshell-connection-default-profile
       (eshell-path-env-list))))
  '(display-buffer-alist
-   '(("\\(?:.*shell\\)\\|\\(?:\\*grep\\)\\|\\(?:\\*compilation\\*\\)\\|\\(?:\\*vterminal<[0-9]+>\\*\\)" display-buffer-in-side-window
+   '(("\\(?:.*shell\\)\\|\\(?:\\*grep\\)\\|\\(?:\\*compilation\\*\\)\\|\\(?:\\*vterminal - [0-9]+\\*\\)\\|\\(\\*scratch\\*\\)" display-buffer-in-side-window
       (side . bottom)
       (slot . 0)
       (window-height . 10))
@@ -694,7 +794,9 @@ same directory as the org-buffer and insert a link to this file."
       (slot . 0)
       (window-width . 80))))
  '(safe-local-variable-values
-   '((eval setq-local conan-install-command #'conan-install-poetry2)
+   '((eval setq-local conan-install-command #'conan-install-vihalp-lib)
+     (eval setq-local conan-build-command #'conan-build-vihalp-lib)
+     (eval setq-local conan-install-command #'conan-install-poetry2)
      (eval setq-local conan-install-command #'conan-install-lock)
      (eval setq-local conan-install-command #'conan-install-default)
      (eval setq-local conan-build-command #'conan-build-default)
@@ -790,6 +892,10 @@ same directory as the org-buffer and insert a link to this file."
          "/home/lundkhe/.euler-cli/bin" path-separator
          (getenv "PATH")))
 
+(defun conan-build-vihalp-lib (profile)
+(format "cd %s && poetry run conan build .. " profile)
+    )
+
 (defun conan-build-poetry (profile)
 (format "cd %s && poetry run conan build .. " profile)
     )
@@ -797,6 +903,9 @@ same directory as the org-buffer and insert a link to this file."
 (defun conan-build-plain (profile)
 (format "cd %s && conan build .. " profile)
     )
+
+(defun conan-install-vihalp-lib (profile)
+    (format "mkdir -p %s && cd %s && poetry run conan install -pr:b default -pr:h %s --update --build missing ..  -e CMAKE_EXPORT_COMPILE_COMMANDS=ON -o create_and_run_unit_tests=True -o vihalp_lib:device=v2d -o vihalp_lib:variant=8xx" profile profile profile))
 
 (defun conan-install-lock (profile)
     (format "mkdir -p %s && cd %s &&  poetry run conan install .. --lockfile conan.lock --build missing .. -e CMAKE_EXPORT_COMPILE_COMMANDS=ON" profile profile))
