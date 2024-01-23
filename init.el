@@ -38,6 +38,7 @@
 (require 'use-package-ensure)
 (setq use-package-always-ensure t)
 
+
 ;;
 ;; evil
 ;;
@@ -62,6 +63,15 @@
 			 (local-unset-key (kbd "SPC"))))
 	     )
 (require 'evil)
+
+(use-package dired+
+  :config
+  (add-hook 'dired-mode-hook
+		(lambda ()
+		  (local-set-key (kbd "w") 'diredp-copy-abs-filenames-as-kill-recursive)
+		  (local-set-key (kbd "W") 'dired-copy-filename-as-kill)
+		  ))
+  )
 
 ;;------------------------------------------------------------------------------
 ;; Org
@@ -445,6 +455,22 @@ same directory as the org-buffer and insert a link to this file."
 ;;------------------------------------------------------------------------------
 ;; Coding
 ;;------------------------------------------------------------------------------
+
+(use-package editorconfig
+  :ensure t
+  :config
+  (editorconfig-mode 1))
+(use-package copilot
+  :straight (:host github :repo "copilot-emacs/copilot.el" :files ("dist" "*.el"))
+  :ensure t
+  :config
+  (setq copilot-node-executable "~/.nvm/versions/node/v21.6.0/bin/node")
+  (add-hook 'prog-mode-hook 'copilot-mode)
+  (define-key copilot-completion-map (kbd "M-c c") 'copilot-accept-completion)
+  (define-key copilot-completion-map (kbd "M-c n") 'copilot-next-completion)
+  (define-key copilot-completion-map (kbd "M-c p") 'copilot-previous-completion)
+  ;;(evil-define-key 'insert 'global (kbd "C-TAB") 'copilot-accept-completion)
+  )
 (use-package sx)
 (defun project-debug ()
   (interactive)
@@ -592,6 +618,7 @@ same directory as the org-buffer and insert a link to this file."
 ;;------------------------------------------------------------------------------
 ;; Misc
 ;;------------------------------------------------------------------------------
+(use-package dockerfile-mode)
 (use-package golden-ratio
   :config
   (golden-ratio-mode 1))
