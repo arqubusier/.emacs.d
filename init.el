@@ -134,7 +134,19 @@ same directory as the org-buffer and insert a link to this file."
   )
 
 
+(straight-use-package
+ '(el-easydraw :type git :host github :repo "misohena/el-easydraw"))
 (require 'iso-transl)
+(with-eval-after-load 'org
+  (require 'edraw-org)
+  (edraw-org-setup-default))
+;; When using the org-export-in-background option (when using the
+;; asynchronous export function), the following settings are
+;; required. This is because Emacs started in a separate process does
+;; not load org.el but only ox.el.
+(with-eval-after-load "ox"
+  (require 'edraw-org)
+  (edraw-org-setup-exporter))
 ;;------------------------------------------------------------------------------
 ;; completion
 ;;------------------------------------------------------------------------------
@@ -346,6 +358,7 @@ same directory as the org-buffer and insert a link to this file."
   ;; TAB cycle if there are only few candidates
   (setq completion-cycle-threshold 3)
 
+  (setq isearch-lazy-count t)
   ;; Emacs 28: Hide commands in M-x which do not apply to the current mode.
   ;; Corfu commands are hidden, since they are not supposed to be used via M-x.
   ;; (setq read-extended-command-predicate
@@ -376,7 +389,8 @@ same directory as the org-buffer and insert a link to this file."
   (global-set-key (kbd "<f9>")
 		  #'(lambda()
 		      (interactive)
-		      (open-vterm 5)))
+		      (toggle-buffer (completing-read "Select gdb buffer:" (all-completions "*gdb" (mapcar #'buffer-name (buffer-list)))))
+		       ))
   (global-set-key (kbd "<f10>")
 		  #'(lambda()
 		      (interactive)
@@ -618,6 +632,16 @@ same directory as the org-buffer and insert a link to this file."
 ;;------------------------------------------------------------------------------
 ;; Misc
 ;;------------------------------------------------------------------------------
+(winner-mode)
+(defun my-toggle-full-window()
+  "Toggle full view of selected window."
+  (interactive)
+  ;; @see http://www.gnu.org/software/emacs/manual/html_node/elisp/Splitting-Windows.html
+  (if (window-parent)
+      (delete-other-windows)
+    (winner-undo)))
+ 
+(use-package adoc-mode)
 (use-package dockerfile-mode)
 (use-package golden-ratio
   :config
