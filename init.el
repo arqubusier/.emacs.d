@@ -12,6 +12,7 @@
 ;;
 ;; Then try starting emacs again
 ;;------------------------------------------------------------------------------
+(defvar native-comp-deferred-compilation-deny-list nil) 
 (defvar bootstrap-version)
 (let ((bootstrap-file
        (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
@@ -25,6 +26,8 @@
       (eval-print-last-sexp)))
   (load bootstrap-file nil 'nomessage))
 
+(straight-use-package 'org)
+
 ;; Install use-package
 (straight-use-package 'use-package)
 
@@ -34,7 +37,6 @@
 
 (require 'use-package-ensure)
 (setq use-package-always-ensure t)
-
 
 
 ;;
@@ -61,6 +63,15 @@
 			 (local-unset-key (kbd "SPC"))))
 	     )
 (require 'evil)
+
+(use-package dired+
+  :config
+  (add-hook 'dired-mode-hook
+		(lambda ()
+		  (local-set-key (kbd "w") 'diredp-copy-abs-filenames-as-kill-recursive)
+		  (local-set-key (kbd "W") 'dired-copy-filename-as-kill)
+		  ))
+  )
 
 ;;------------------------------------------------------------------------------
 ;; Org
@@ -113,6 +124,8 @@ same directory as the org-buffer and insert a link to this file."
   )
 
 (use-package org-journal
+  :init
+  (setq org-element-use-cache nil)
   :config
   (evil-global-set-key 'normal (kbd "SPC n d") 'org-journal-new-entry)
   (evil-global-set-key 'normal (kbd "SPC n j") 'org-journal-next-entry)
@@ -121,6 +134,19 @@ same directory as the org-buffer and insert a link to this file."
   )
 
 
+(straight-use-package
+ '(el-easydraw :type git :host github :repo "misohena/el-easydraw"))
+(require 'iso-transl)
+(with-eval-after-load 'org
+  (require 'edraw-org)
+  (edraw-org-setup-default))
+;; When using the org-export-in-background option (when using the
+;; asynchronous export function), the following settings are
+;; required. This is because Emacs started in a separate process does
+;; not load org.el but only ox.el.
+(with-eval-after-load "ox"
+  (require 'edraw-org)
+  (edraw-org-setup-exporter))
 ;;------------------------------------------------------------------------------
 ;; completion
 ;;------------------------------------------------------------------------------
@@ -139,50 +165,9 @@ same directory as the org-buffer and insert a link to this file."
   :init
   (marginalia-mode))
 
-;; Example configuration for Consult
 (use-package consult
   ;; Replace bindings. Lazily loaded due by `use-package'.
   :bind (;; C-c bindings (mode-specific-map)
-         ("C-c h" . consult-history)
-         ("C-c m" . consult-mode-command)
-         ("C-c k" . consult-kmacro)
-         ;; C-x bindings (ctl-x-map)
-         ("C-x M-:" . consult-complex-command)     ;; orig. repeat-complex-command
-         ("C-x b" . consult-buffer)                ;; orig. switch-to-buffer
-         ("C-x 4 b" . consult-buffer-other-window) ;; orig. switch-to-buffer-other-window
-         ("C-x 5 b" . consult-buffer-other-frame)  ;; orig. switch-to-buffer-other-frame
-         ("C-x r b" . consult-bookmark)            ;; orig. bookmark-jump
-         ("C-x p b" . consult-project-buffer)      ;; orig. project-switch-to-buffer
-         ;; Custom M-# bindings for fast register access
-         ("M-#" . consult-register-load)
-         ("M-'" . consult-register-store)          ;; orig. abbrev-prefix-mark (unrelated)
-         ("C-M-#" . consult-register)
-         ;; Other custom bindings
-         ("M-y" . consult-yank-pop)                ;; orig. yank-pop
-         ("<help> a" . consult-apropos)            ;; orig. apropos-command
-         ;; M-g bindings (goto-map)
-         ("M-g e" . consult-compile-error)
-         ("M-g f" . consult-flymake)               ;; Alternative: consult-flycheck
-         ("M-g g" . consult-goto-line)             ;; orig. goto-line
-         ("M-g M-g" . consult-goto-line)           ;; orig. goto-line
-         ("M-g o" . consult-outline)               ;; Alternative: consult-org-heading
-         ("M-g m" . consult-mark)
-         ("M-g k" . consult-global-mark)
-         ("M-g i" . consult-imenu)
-         ("M-g I" . consult-imenu-multi)
-         ;; M-s bindings (search-map)
-         ("M-s d" . consult-find)
-         ("M-s D" . consult-locate)
-         ("M-s g" . consult-grep)
-         ("M-s G" . consult-git-grep)
-         ("M-s r" . consult-ripgrep)
-         ("M-s l" . consult-line)
-         ("M-s L" . consult-line-multi)
-         ("M-s m" . consult-multi-occur)
-         ("M-s k" . consult-keep-lines)
-         ("M-s u" . consult-focus-lines)
-         ;; Isearch integration
-         ("M-s e" . consult-isearch-history)
          :map isearch-mode-map
          ("M-e" . consult-isearch-history)         ;; orig. isearch-edit-string
          ("M-s e" . consult-isearch-history)       ;; orig. isearch-edit-string
@@ -225,33 +210,18 @@ same directory as the org-buffer and insert a link to this file."
   ;; :preview-key on a per-command basis using the `consult-customize' macro.
   (consult-customize
    consult-theme
-   :preview-key '(:debounce 0.2 any)
    consult-ripgrep consult-git-grep consult-grep
    consult-bookmark consult-recent-file consult-xref
    consult--source-bookmark consult--source-recent-file
    consult--source-project-recent-file
+   :preview-key '(:debounce 0.2 any)
    :preview-key (kbd "M-."))
 
   ;; Optionally configure the narrowing key.
   ;; Both < and C-+ work reasonably well.
-  (setq consult-narrow-key "<") ;; (kbd "C-+")
+  ; (setq consult-narrow-key "<") ;; (kbd "C-+")
 
-  ;; Optionally make narrowing help available in the minibuffer.
-  ;; You may want to use `embark-prefix-help-command' or which-key instead.
-  ;; (define-key consult-narrow-map (vconcat consult-narrow-key "?") #'consult-narrow-help)
-
-  ;; By default `consult-project-function' uses `project-root' from project.el.
-  ;; Optionally configure a different project root function.
-  ;; There are multiple reasonable alternatives to chose from.
-  ;;;; 1. project.el (the default)
-  ;; (setq consult-project-function #'consult--default-project--function)
-  ;;;; 2. projectile.el (projectile-project-root)
-  ;; (autoload 'projectile-project-root "projectile")
-  ;; (setq consult-project-function (lambda (_) (projectile-project-root)))
-  ;;;; 3. vc.el (vc-root-dir)
-  ;; (setq consult-project-function (lambda (_) (vc-root-dir)))
-  ;;;; 4. locate-dominating-file
-  ;; (setq consult-project-function (lambda (_) (locate-dominating-file "." ".git")))
+  (setq consult-project-function #'consult--default-project-function)
 
   (evil-global-set-key 'normal (kbd "SPC b") 'consult-buffer)
   (evil-global-set-key 'normal (kbd "SPC d") 'consult-find)
@@ -262,6 +232,38 @@ same directory as the org-buffer and insert a link to this file."
   (evil-global-set-key 'normal (kbd "SPC x i") #'conan-install)
 )
 (require 'consult)
+
+(use-package embark
+  :ensure t
+
+  :bind
+  (("C-." . embark-act)         ;; pick some comfortable binding
+   ("C-;" . embark-dwim)        ;; good alternative: M-.
+   ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
+
+  :init
+
+  ;; Optionally replace the key help with a completing-read interface
+  (setq prefix-help-command #'embark-prefix-help-command)
+
+  ;; Show the Embark target at point via Eldoc.  You may adjust the Eldoc
+  ;; strategy, if you want to see the documentation from multiple providers.
+  ;;(add-hook 'eldoc-documentation-functions #'embark-eldoc-first-target)
+  ;; (setq eldoc-documentation-strategy #'eldoc-documentation-compose-eagerly)
+
+  :config
+
+  ;; Hide the mode line of the Embark live/completions buffers
+  (add-to-list 'display-buffer-alist
+               '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+                 nil
+                 (window-parameters (mode-line-format . none)))))
+
+;; Consult users will also want the embark-consult package.
+(use-package embark-consult
+  :ensure t ; only need to install it, embark loads it after consult if found
+  :hook
+  (embark-collect-mode . consult-preview-at-point-mode))
 
 (use-package orderless
   :custom (completion-styles '(orderless)))
@@ -291,7 +293,7 @@ same directory as the org-buffer and insert a link to this file."
   ;; Recommended: Enable Corfu globally.
   ;; This is recommended since dabbrev can be used globally (M-/).
   :init
-  (corfu-global-mode)
+  (global-corfu-mode)
   :bind
   (:map corfu-map
         ("TAB" . corfu-next)
@@ -300,12 +302,63 @@ same directory as the org-buffer and insert a link to this file."
         ([backtab] . corfu-previous))
   )
 
+(defun my-func-one (arg1 &optional arg2 arg3)
+  (interactive "nasdf ")
+  (message "%s %s %s" arg1 arg2 arg3))
+
+(defun open-vterm (number)
+  "Switch to a numbered vterm buffer, creating it if missing."
+  (interactive "nterminal number: ")
+  (let ((buf-name (concat "*vterminal - " (number-to-string number) "*")))
+    (if (equal (get-buffer buf-name) nil)
+      (progn
+       (pop-to-buffer (multi-vterm))
+       (multi-vterm-rename-buffer (number-to-string number))
+      )
+      (pop-to-buffer buf-name)
+      )
+    )
+  )
+
+(require 'python)
+
+(defvar last-toggle-buffer nil
+  "buffer to jump back to when using `toggle-buffer'")
+
+(defvar toggleable-buffers '("*Help*" "*scratch*" "*compilation*")
+  "buffer to jump back to when using `toggle-buffer'")
+
+(defun toggle-buffer (target-name)
+  "Switch to a buffer, if already on this buffer switch back to the previous buffer."
+  (interactive "buffer to switch to:")
+  (if (string= (buffer-name) target-name)
+    ;; switch back to the last buffer, but only if it
+     ;; still exists.
+      (progn
+	;;(message last-toggle-buffer)
+	(if (buffer-live-p last-toggle-buffer)
+	   (progn
+	     (quit-window)
+             (pop-to-buffer last-toggle-buffer)
+	    )
+	  ;; buffer's dead; clear the variable.
+	  (setq last-toggle-buffer nil)))
+    ;; Go to the target buffer
+    (progn
+       (if (not (member (buffer-name) toggleable-buffers))
+	(setq last-toggle-buffer (current-buffer))
+	)
+	(pop-to-buffer target-name)
+	)
+    ))
+
 ;; A few more useful configurations...
 (use-package emacs
   :init
   ;; TAB cycle if there are only few candidates
   (setq completion-cycle-threshold 3)
 
+  (setq isearch-lazy-count t)
   ;; Emacs 28: Hide commands in M-x which do not apply to the current mode.
   ;; Corfu commands are hidden, since they are not supposed to be used via M-x.
   ;; (setq read-extended-command-predicate
@@ -320,30 +373,98 @@ same directory as the org-buffer and insert a link to this file."
   (global-set-key (kbd "<f5>")
 		  #'(lambda()
 		      (interactive)
-		      (pop-to-buffer "*terminal<1>*")))
+		      (open-vterm 1)))
   (global-set-key (kbd "<f6>")
 		  #'(lambda()
 		      (interactive)
-		      (pop-to-buffer "*terminal<2>*")))
+		      (open-vterm 2)))
   (global-set-key (kbd "<f7>")
 		  #'(lambda()
 		      (interactive)
-		      (pop-to-buffer "*terminal<3>*")))
+		      (open-vterm 3)))
   (global-set-key (kbd "<f8>")
 		  #'(lambda()
 		      (interactive)
-		      (pop-to-buffer "*terminal<4>*")))
+		      (open-vterm 4)))
   (global-set-key (kbd "<f9>")
 		  #'(lambda()
 		      (interactive)
-		      (pop-to-buffer "*compilation*")))
-  :bind (
-	 :map c-mode-base-map
-	 ("TAB" . indent-for-tab-command)
-	 )
+		      (toggle-buffer (completing-read "Select gdb buffer:" (all-completions "*gdb" (mapcar #'buffer-name (buffer-list)))))
+		       ))
+  (global-set-key (kbd "<f10>")
+		  #'(lambda()
+		      (interactive)
+		      (toggle-buffer "*compilation*")))
+  (global-set-key (kbd "<f11>")
+		  #'(lambda()
+		      (interactive)
+		      (toggle-buffer "*Help*")))
+  (global-set-key (kbd "<f12>")
+		  #'(lambda()
+		      (interactive)
+		      (toggle-buffer "*scratch*")))
+  ;;:bind (
+  ;;	 :map c-mode-base-map
+  ;;	 ("TAB" . indent-for-tab-command)
+  ;;	 )
   )
 
 
+;;------------------------------------------------------------------------------
+;; terminal
+;;------------------------------------------------------------------------------
+(use-package vterm
+  :config
+  (define-key vterm-mode-map (kbd "<C-backspace>")
+    (lambda () (interactive) (vterm-send-key (kbd "C-w"))))
+  (define-key vterm-mode-map (kbd "<f3>") nil)
+  (define-key vterm-mode-map (kbd "<f4>") nil)
+  (define-key vterm-mode-map (kbd "<f5>") nil)
+  (define-key vterm-mode-map (kbd "<f6>") nil)
+  (define-key vterm-mode-map (kbd "<f7>") nil)
+  (define-key vterm-mode-map (kbd "<f8>") nil)
+  (define-key vterm-mode-map (kbd "<f9>") nil)
+  (add-hook 'vterm-mode-hook
+	    (lambda ()
+	      (setq-local evil-insert-state-cursor 'box)
+	      (evil-insert-state)))
+  (define-key vterm-mode-map [return]                      #'vterm-send-return)
+  
+  (setq vterm-keymap-exceptions nil)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-e")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-f")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-a")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-v")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-b")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-w")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-u")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-d")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-n")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-m")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-p")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-j")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-k")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-r")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-t")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-g")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-c")      #'vterm--self-insert)
+  (evil-define-key 'insert vterm-mode-map (kbd "C-SPC")    #'vterm--self-insert)
+  (evil-define-key 'normal vterm-mode-map (kbd "C-d")      #'vterm--self-insert)
+  (evil-define-key 'normal vterm-mode-map (kbd ",c")       #'multi-vterm)
+  (evil-define-key 'normal vterm-mode-map (kbd ",n")       #'multi-vterm-next)
+  (evil-define-key 'normal vterm-mode-map (kbd ",p")       #'multi-vterm-prev)
+  (evil-define-key 'normal vterm-mode-map (kbd "i")        #'evil-insert-resume)
+  (evil-define-key 'normal vterm-mode-map (kbd "o")        #'evil-insert-resume)
+  (evil-define-key 'normal vterm-mode-map (kbd "<return>") #'evil-insert-resume)
+
+  (setq vterm-shell "fish")
+  )
+(use-package multi-vterm)
+(use-package vterm-toggle
+  :config
+  (global-set-key (kbd "<f3>") #'vterm-toggle)
+  (global-set-key (kbd "<f4>") #'vterm-toggle-insert-cd)
+  )
 
 ;;------------------------------------------------------------------------------
 ;; Coding
@@ -369,6 +490,34 @@ same directory as the org-buffer and insert a link to this file."
 (add-hook 'web-mode-hook  'my-web-mode-hook)
 
 (add-hook 'prog-mode-hook #'yas-minor-mode-on)
+(use-package editorconfig
+  :ensure t
+  :config
+  (editorconfig-mode 1))
+(use-package copilot
+  :straight (:host github :repo "copilot-emacs/copilot.el" :files ("dist" "*.el"))
+  :ensure t
+  :config
+  (setq copilot-node-executable "~/.nvm/versions/node/v21.6.0/bin/node")
+  (add-hook 'prog-mode-hook 'copilot-mode)
+  (define-key copilot-completion-map (kbd "M-c c") 'copilot-accept-completion)
+  (define-key copilot-completion-map (kbd "M-c n") 'copilot-next-completion)
+  (define-key copilot-completion-map (kbd "M-c p") 'copilot-previous-completion)
+  ;;(evil-define-key 'insert 'global (kbd "C-TAB") 'copilot-accept-completion)
+  )
+(use-package sx)
+(defun project-debug ()
+  (interactive)
+  (let ((default-directory (vc-root-dir)))
+  (realgud:gdb)
+  )
+  )
+
+(use-package flymake-diagnostic-at-point
+  :after flymake
+  :config
+  (add-hook 'flymake-mode-hook #'flymake-diagnostic-at-point-mode))
+
 (use-package flyspell
   :config
 (add-hook 'prog-mode-hook #'flyspell-prog-mode)
@@ -382,14 +531,12 @@ same directory as the org-buffer and insert a link to this file."
  (setq indent-tabs-mode nil)
  (setq display-fill-column-indicator-column 120)
  (display-fill-column-indicator-mode)
+ (google-set-c-style)
+ (google-make-newline-indent)
   )
 (use-package google-c-style)
 (setq c-default-style "google")
-(add-hook 'c-mode-common-hook
-	  'my-c-common-mode-hook
-	  'google-set-c-style
-	  'google-make-newline-indent
-	  )
+(add-hook 'c-mode-common-hook #'my-c-common-mode-hook)
 
 ;; Add this to .dir-locals.el of your project
 ;; ((c++-mode
@@ -456,8 +603,8 @@ same directory as the org-buffer and insert a link to this file."
 (use-package lsp-ui
   :config
   (setq lsp-ui-doc-enable t)
-  (setq lsp-ui-doc-show-with-cursor t)
-  (setq lsp-ui-doc-show-with-mouse t)
+  (setq lsp-ui-doc-show-with-cursor nil)
+  (setq lsp-ui-doc-show-with-mouse nil)
   )
 
 (use-package treemacs)
@@ -476,6 +623,7 @@ same directory as the org-buffer and insert a link to this file."
 (use-package project) ;; For eglot
 (use-package ag)
 (use-package rust-mode)
+(use-package lua-mode)
 
 (use-package xterm-color
   :config
@@ -489,6 +637,7 @@ same directory as the org-buffer and insert a link to this file."
 (use-package yaml-mode)
 (use-package yasnippet
   :config
+(add-hook 'prog-mode-hook #'yas-minor-mode)
 (setq yas-snippet-dirs '( "~/.emacs.d/snippets" ))
 (yas-reload-all)
   )
@@ -503,6 +652,21 @@ same directory as the org-buffer and insert a link to this file."
 ;;------------------------------------------------------------------------------
 ;; Misc
 ;;------------------------------------------------------------------------------
+(winner-mode)
+(defun my-toggle-full-window()
+  "Toggle full view of selected window."
+  (interactive)
+  ;; @see http://www.gnu.org/software/emacs/manual/html_node/elisp/Splitting-Windows.html
+  (if (window-parent)
+      (delete-other-windows)
+    (winner-undo)))
+ 
+(use-package adoc-mode)
+(use-package dockerfile-mode)
+(use-package golden-ratio
+  :config
+  (golden-ratio-mode 1))
+
 (global-visual-line-mode 1)
 ;; (setq desktop-path '("~/.emacs.d/"))
 ;; (setq desktop-dirname "~/.emacs.d/")
@@ -607,8 +771,92 @@ same directory as the org-buffer and insert a link to this file."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(bmkp-last-as-first-bookmark-file "~/.emacs.d/bookmarks")
+ '(connection-local-criteria-alist
+   '(((:application tramp :protocol "flatpak")
+      tramp-container-connection-local-default-flatpak-profile)
+     ((:application tramp)
+      tramp-connection-local-default-system-profile tramp-connection-local-default-shell-profile)
+     ((:application eshell)
+      eshell-connection-default-profile)))
+ '(connection-local-profile-alist
+   '((tramp-container-connection-local-default-flatpak-profile
+      (tramp-remote-path "/app/bin" tramp-default-remote-path "/bin" "/usr/bin" "/sbin" "/usr/sbin" "/usr/local/bin" "/usr/local/sbin" "/local/bin" "/local/freeware/bin" "/local/gnu/bin" "/usr/freeware/bin" "/usr/pkg/bin" "/usr/contrib/bin" "/opt/bin" "/opt/sbin" "/opt/local/bin"))
+     (tramp-connection-local-darwin-ps-profile
+      (tramp-process-attributes-ps-args "-acxww" "-o" "pid,uid,user,gid,comm=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" "-o" "state=abcde" "-o" "ppid,pgid,sess,tty,tpgid,minflt,majflt,time,pri,nice,vsz,rss,etime,pcpu,pmem,args")
+      (tramp-process-attributes-ps-format
+       (pid . number)
+       (euid . number)
+       (user . string)
+       (egid . number)
+       (comm . 52)
+       (state . 5)
+       (ppid . number)
+       (pgrp . number)
+       (sess . number)
+       (ttname . string)
+       (tpgid . number)
+       (minflt . number)
+       (majflt . number)
+       (time . tramp-ps-time)
+       (pri . number)
+       (nice . number)
+       (vsize . number)
+       (rss . number)
+       (etime . tramp-ps-time)
+       (pcpu . number)
+       (pmem . number)
+       (args)))
+     (tramp-connection-local-busybox-ps-profile
+      (tramp-process-attributes-ps-args "-o" "pid,user,group,comm=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" "-o" "stat=abcde" "-o" "ppid,pgid,tty,time,nice,etime,args")
+      (tramp-process-attributes-ps-format
+       (pid . number)
+       (user . string)
+       (group . string)
+       (comm . 52)
+       (state . 5)
+       (ppid . number)
+       (pgrp . number)
+       (ttname . string)
+       (time . tramp-ps-time)
+       (nice . number)
+       (etime . tramp-ps-time)
+       (args)))
+     (tramp-connection-local-bsd-ps-profile
+      (tramp-process-attributes-ps-args "-acxww" "-o" "pid,euid,user,egid,egroup,comm=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" "-o" "state,ppid,pgid,sid,tty,tpgid,minflt,majflt,time,pri,nice,vsz,rss,etimes,pcpu,pmem,args")
+      (tramp-process-attributes-ps-format
+       (pid . number)
+       (euid . number)
+       (user . string)
+       (egid . number)
+       (group . string)
+       (comm . 52)
+       (state . string)
+       (ppid . number)
+       (pgrp . number)
+       (sess . number)
+       (ttname . string)
+       (tpgid . number)
+       (minflt . number)
+       (majflt . number)
+       (time . tramp-ps-time)
+       (pri . number)
+       (nice . number)
+       (vsize . number)
+       (rss . number)
+       (etime . number)
+       (pcpu . number)
+       (pmem . number)
+       (args)))
+     (tramp-connection-local-default-shell-profile
+      (shell-file-name . "/bin/sh")
+      (shell-command-switch . "-c"))
+     (tramp-connection-local-default-system-profile
+      (path-separator . ":")
+      (null-device . "/dev/null"))
+     (eshell-connection-default-profile
+      (eshell-path-env-list))))
  '(display-buffer-alist
-   '(("\\(?:.*shell\\)\\|\\(?:\\*grep\\)\\|\\(?:\\*compilation\\*\\)\\|\\(?:\\*terminal<[0-9]+>\\*\\)" display-buffer-in-side-window
+   '(("\\(?:.*shell\\)\\|\\(?:\\*grep\\)\\|\\(?:\\*compilation\\*\\)\\|\\(?:\\*vterminal - [0-9]+\\*\\)\\|\\(\\*scratch\\*\\)" display-buffer-in-side-window
       (side . bottom)
       (slot . 0)
       (window-height . 10))
@@ -617,9 +865,20 @@ same directory as the org-buffer and insert a link to this file."
       (slot . 0)
       (window-width . 80))))
  '(safe-local-variable-values
-   '((eval add-hook 'before-save-hook #'clang-format-buffer nil t)))
- '(warning-suppress-log-types '(((defvaralias losing-value woman-topic-history))))
- '(warning-suppress-types '(((defvaralias losing-value woman-topic-history)))))
+   '((eval setq-local conan-install-command #'conan-install-vihalp-lib)
+     (eval setq-local conan-build-command #'conan-build-vihalp-lib)
+     (eval setq-local conan-install-command #'conan-install-poetry2)
+     (eval setq-local conan-install-command #'conan-install-lock)
+     (eval setq-local conan-install-command #'conan-install-default)
+     (eval setq-local conan-build-command #'conan-build-default)
+     (eval setq-local conan-install-command #'conan-install-poetry)
+     (eval setq-local conan-build-command #'conan-build-poetry)
+     (eval setq-local conan-build-format
+	   (lambda "build with conan + poetry"
+	     (profile)
+	     (message "hej")))
+     (eval add-hook 'before-save-hook #'clang-format-buffer nil t)))
+ '(warning-suppress-log-types '((comp))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -670,6 +929,10 @@ same directory as the org-buffer and insert a link to this file."
 (require 'which-key)
 (which-key-mode)
 
+(use-package markdown-mode
+  :config
+  (setq makrdown-command "/usr/bin/pandoc"))
+
 
 (require 'notifications)
 (use-package alert)
@@ -690,7 +953,42 @@ same directory as the org-buffer and insert a link to this file."
   (elfeed-org)
   (setq rmh-elfeed-org-files (list "~/.emacs.d/elfeed.org")))
 
+(use-package rg)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; sick
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(setenv "PATH"
+        (concat
+         "/home/lundkhe/.euler-cli/bin" path-separator
+         (getenv "PATH")))
+
+(defun conan-build-vihalp-lib (profile)
+(format "cd %s && poetry run conan build .. " profile)
+    )
+
+(defun conan-build-poetry (profile)
+(format "cd %s && poetry run conan build .. " profile)
+    )
+
+(defun conan-build-plain (profile)
+(format "cd %s && conan build .. " profile)
+    )
+
+(defun conan-install-vihalp-lib (profile)
+    (format "mkdir -p %s && cd %s && poetry run conan install -pr:b default -pr:h %s --update --build missing ..  -e CMAKE_EXPORT_COMPILE_COMMANDS=ON -o create_and_run_unit_tests=True -o vihalp_lib:device=v2d -o vihalp_lib:variant=8xx" profile profile profile))
+
+(defun conan-install-lock (profile)
+    (format "mkdir -p %s && cd %s &&  poetry run conan install .. --lockfile conan.lock --build missing .. -e CMAKE_EXPORT_COMPILE_COMMANDS=ON" profile profile))
+
+(defun conan-install-poetry (profile)
+    (format "mkdir -p %s && cd %s && poetry run conan install -pr %s --update --build missing ..  -e CMAKE_EXPORT_COMPILE_COMMANDS=ON -o create_and_run_unit_tests=True" profile profile profile))
+
+(defun conan-install-poetry2 (profile)
+    (format "mkdir -p %s && cd %s && poetry run conan install -pr %s --update --build missing ..  -e CMAKE_EXPORT_COMPILE_COMMANDS=ON" profile profile profile))
+
+(defun conan-install-plain (profile)
+    (format "mkdir -p %s && cd %s && conan install -pr %s --update --build missing ..  -e CMAKE_EXPORT_COMPILE_COMMANDS=ON -o create_and_run_unit_tests=True" profile profile profile))
 
 (defun conan-build-default (profile)
 (format "euler devshell --commands='cd %s && conan build .. ; exit'" profile)
@@ -698,8 +996,11 @@ same directory as the org-buffer and insert a link to this file."
 (defun conan-install-default (profile)
 (format "euler devshell --commands='mkdir -p %s && cd %s &&  conan install -pr %s --update --build missing .. -e CMAKE_EXPORT_COMPILE_COMMANDS=ON ; exit'" profile profile profile))
 
-(defvar conan-build-command #'conan-build-default)
-(defvar conan-install-command #'conan-install-default)
+(defun conan-install-lock (profile)
+(format "euler devshell --commands='mkdir -p %s && cd %s &&  conan install -pr %s --update --build missing .. --lockfile=../config/base.lock ; exit'" profile profile profile))
+
+(defvar conan-build-command #'conan-build-plain)
+(defvar conan-install-command #'conan-install-plain)
 
 (defun conan-profiles ()
  (split-string (shell-command-to-string "conan profile list")))
