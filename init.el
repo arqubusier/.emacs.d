@@ -28,18 +28,21 @@
 
 (straight-use-package 'org)
 
+
+
 ;; Install use-package
 (straight-use-package 'use-package)
 
 ;; Configure use-package to use straight.el by default
 (use-package straight
-             :custom (straight-use-package-by-default t))
+  :custom
+  (straight-use-package-by-default t)
+  (straight-built-in-pseudo-packages '(emacs eldoc tree-sitter tree-sitter-langs nadvice python image-mode project flymake xref track-changes))
+  )
 
 (require 'use-package-ensure)
 (setq use-package-always-ensure t)
 
-
-;;
 ;; evil
 ;;
 (use-package undo-fu)
@@ -50,7 +53,6 @@
              :config
 	     (setcdr evil-insert-state-map nil)
 	     (define-key evil-insert-state-map [escape] 'evil-normal-state)
-	     (define-key evil-normal-state-map (kbd "C-u") 'evil-scroll-up)
 	     (evil-mode)
 	     (evil-global-set-key 'normal (kbd "SPC f") #'find-file)
 	     (evil-global-set-key 'normal (kbd "SPC j") #'evil-window-next)
@@ -64,14 +66,12 @@
 	     )
 (require 'evil)
 
-(use-package dired+
+(use-package exec-path-from-shell
   :config
-  (add-hook 'dired-mode-hook
-		(lambda ()
-		  (local-set-key (kbd "w") 'diredp-copy-abs-filenames-as-kill-recursive)
-		  (local-set-key (kbd "W") 'dired-copy-filename-as-kill)
-		  ))
+  (when (memq window-system '(mac ns x))
+  (exec-path-from-shell-initialize))
   )
+(use-package tramp)
 
 ;;------------------------------------------------------------------------------
 ;; Org
@@ -84,6 +84,8 @@
 (org-babel-do-load-languages
  'org-babel-load-languages
  '((dot . t)))
+
+(require 'ob-dot)
   
 (use-package org-download
   :config
@@ -103,10 +105,10 @@ same directory as the org-buffer and insert a link to this file."
   (insert (concat "[[" filename "]]"))
   (org-display-inline-images))
 
-(use-package sqlite3)
-(use-package emacsql)
+;;(use-package sqlite3)
+;;(use-package emacsql)
 (use-package emacsql-sqlite3)
-(use-package emacsql-sqlite)
+;;(use-package emacsql-sqlite)
 
 (use-package org-roam
   :ensure t
@@ -147,6 +149,14 @@ same directory as the org-buffer and insert a link to this file."
 (with-eval-after-load "ox"
   (require 'edraw-org)
   (edraw-org-setup-exporter))
+
+
+(use-package ediff
+  :config
+  (setq ediff-split-window-function 'split-window-horizontally)
+  (setq ediff-window-setup-function 'ediff-setup-windows-plain)
+  )
+
 ;;------------------------------------------------------------------------------
 ;; completion
 ;;------------------------------------------------------------------------------
@@ -424,6 +434,9 @@ same directory as the org-buffer and insert a link to this file."
   (define-key vterm-mode-map (kbd "<f7>") nil)
   (define-key vterm-mode-map (kbd "<f8>") nil)
   (define-key vterm-mode-map (kbd "<f9>") nil)
+  (define-key vterm-mode-map (kbd "<f11>") nil)
+  (define-key vterm-mode-map (kbd "<f12>") nil)
+  (define-key vterm-mode-map (kbd "<kp-enter>") #'vterm-send-return)
   (add-hook 'vterm-mode-hook
 	    (lambda ()
 	      (setq-local evil-insert-state-cursor 'box)
@@ -466,25 +479,44 @@ same directory as the org-buffer and insert a link to this file."
   (global-set-key (kbd "<f4>") #'vterm-toggle-insert-cd)
   )
 
+
 ;;------------------------------------------------------------------------------
 ;; Coding
 ;;------------------------------------------------------------------------------
+(setq exec-path (append exec-path '("~/.nvm/versions/node/v21.6.0/bin")))
+(defun svg2png-save-hook ()
+  (when (eq major-mode 'image-mode)
+    (when (string= (file-name-extension (buffer-file-name)) "svg")
+       (message "Converting svg to png")
+       (shell-command (format "inkscape %s -o %s" (buffer-file-name) (concat (file-name-sans-extension (buffer-file-name)) ".png"))))))
+
+(add-hook 'after-save-hook #'svg2png-save-hook)
 
 (use-package editorconfig
   :ensure t
   :config
   (editorconfig-mode 1))
-(use-package copilot
-  :straight (:host github :repo "copilot-emacs/copilot.el" :files ("dist" "*.el"))
-  :ensure t
-  :config
-  (setq copilot-node-executable "~/.nvm/versions/node/v21.6.0/bin/node")
-  (add-hook 'prog-mode-hook 'copilot-mode)
-  (define-key copilot-completion-map (kbd "M-c c") 'copilot-accept-completion)
-  (define-key copilot-completion-map (kbd "M-c n") 'copilot-next-completion)
-  (define-key copilot-completion-map (kbd "M-c p") 'copilot-previous-completion)
-  ;;(evil-define-key 'insert 'global (kbd "C-TAB") 'copilot-accept-completion)
+  (use-package copilot
+    :straight (:host github :repo "copilot-emacs/copilot.el" :files ("dist" "*.el"))
+    :ensure t
+    :config
+    (add-hook 'prog-mode-hook 'copilot-mode)
+    (define-key copilot-completion-map (kbd "M-c c") 'copilot-accept-completion)
+    (define-key copilot-completion-map (kbd "M-c n") 'copilot-next-completion)
+    (define-key copilot-completion-map (kbd "M-c p") 'copilot-previous-completion)
+    ;;(evil-define-key 'insert 'global (kbd "C-TAB") 'copilot-accept-completion)
   )
+(use-package gptel
+  :custom
+  (gptel-use-curl nil)
+  (gptel-stream nil)
+  )
+  ;;(use-package copilot-chat
+  ;;  :straight (:host github :repo "chep/copilot-chat.el" :files ("*.el"))
+  ;;  :after (request org markdown-mode shell-maker)
+  ;;  :config
+  ;;  (setq copilot-chat-frontend 'org)
+  ;;  )
 (use-package sx)
 (defun project-debug ()
   (interactive)
@@ -492,11 +524,6 @@ same directory as the org-buffer and insert a link to this file."
   (realgud:gdb)
   )
   )
-
-(use-package flymake-diagnostic-at-point
-  :after flymake
-  :config
-  (add-hook 'flymake-mode-hook #'flymake-diagnostic-at-point-mode))
 
 (use-package flyspell
   :config
@@ -520,13 +547,19 @@ same directory as the org-buffer and insert a link to this file."
 
 ;; Add this to .dir-locals.el of your project
 ;; ((c++-mode
-;;  (eval add-hook 'before-save-hook #'clang-format-buffer nil t)))
+;;  (eval add-hook 'before-save-hook #'clang-format-save-hook-for-this-buffer nil t)))
+
+;; Make sure there is a file '.clang-format' in the project root
+
+(use-package clang-format)
+;;(use-package apheleia)
 
 (defun clang-format-save-hook-for-this-buffer ()
   (interactive)
   (add-hook 'before-save-hook
             (lambda ()
 	      (message "running clang-format")
+	      (message "%s" (locate-dominating-file "." ".clang-format"))
               (when (locate-dominating-file "." ".clang-format")
                 (clang-format-buffer))
               ;; Continue to save.
@@ -535,10 +568,7 @@ same directory as the org-buffer and insert a link to this file."
             ;; Buffer local hook.
             t))
 
-(use-package clang-format
-  :config
-)
-(require 'clang-format)
+;(use-package clang-format+)
 
 ;; On ubuntu:
 ;;   # snap install universal-ctags
@@ -560,50 +590,68 @@ same directory as the org-buffer and insert a link to this file."
   (load-theme 'solarized-light t))
 
 ;; Symlink compile-commands.json to project root
-(use-package lsp-mode
-  :init
-  (setq lsp-keymap-prefix "C-c l")
-  ;;(setq lsp-clangd-binary-path "/usr/bin/clangd")
-  (setq lsp-clangd-binary-path "lsp-clients-clangd-args")
-  (setq lsp-log-io t)
-  ;;(setq lsp-clients-clangd-args '("--compile-commands-dir=profile_linux_gcc8_preinstalled_debug"))
-  :hook (
-         (c++-mode . lsp)
-	 )
-  :commands lsp
-  :config
-  (org-add-hook 'lsp-mode-hook
-		(lambda ()
-		  (define-key evil-normal-state-local-map
-                    (kbd "SPC l d") 'lsp-find-definition)
-		  (define-key evil-normal-state-local-map
-		    (kbd "SPC l r") 'lsp-find-references)
-		  ))
-  )
-(use-package lsp-ui
-  :config
-  (setq lsp-ui-doc-enable t)
-  (setq lsp-ui-doc-show-with-cursor nil)
-  (setq lsp-ui-doc-show-with-mouse nil)
-  )
+;; (use-package lsp-mode
+;;   :init
+;;   (setq lsp-keymap-prefix "C-c l")
+;;   ;;(setq lsp-clangd-binary-path "/usr/bin/clangd")
+;;   (setq lsp-clangd-binary-path "lsp-clients-clangd-args")
+;;   (setq lsp-log-io t)
+;;   ;;(setq lsp-clients-clangd-args '("--compile-commands-dir=profile_linux_gcc8_preinstalled_debug"))
+;;   :hook (
+;;          (c++-mode . lsp)
+;; 	 )
+;;   :commands lsp
+;;   :config
+;;   (org-add-hook 'lsp-mode-hook
+;; 		(lambda ()
+;; 		  (define-key evil-normal-state-local-map
+;;                     (kbd "SPC l d") 'lsp-find-definition)
+;; 		  (define-key evil-normal-state-local-map
+;; 		    (kbd "SPC l r") 'lsp-find-references)
+;; 		  ))
+;;   )
+;; (use-package lsp-ui
+;;   :config
+;;   (setq lsp-ui-doc-enable t)
+;;   (setq lsp-ui-doc-show-with-cursor nil)
+;;   (setq lsp-ui-doc-show-with-mouse nil)
+;;   )
 
-(use-package treemacs)
-(use-package lsp-treemacs)
+;;(use-package treemacs)
+;;(use-package lsp-treemacs)
 
-;;(use-package eglot
-;;  :config
+;;(use-package project) ;; For eglot
+(use-package eglot
+  :config
 ;;  (setq eglot-connect-timeout 60)
 ;;  (add-to-list 'eglot-server-programs
 ;;	       '(c++-mode . ("clangd"
 ;;			     "-log=verbose"
 ;;                           "-j=4")))
 ;;  
-;; (add-hook 'c++-mode-hook 'eglot-ensure))
+  (add-hook 'c++-mode-hook 'eglot-ensure)
+  (add-hook 'lisp-mode-hook 'eglot-ensure)
+  )
 
-(use-package project) ;; For eglot
 (use-package ag)
 (use-package rust-mode)
 (use-package lua-mode)
+
+(defun my-web-mode-hook ()
+  "Hooks for Web mode."
+  ;; Indentation settings
+  (setq web-mode-markup-indent-offset 2)
+  (setq web-mode-css-indent-offset 2)
+  (setq web-mode-code-indent-offset 2)
+  ;; Enable JavaScript linting with Flycheck
+  ;;(flycheck-add-mode 'javascript-eslint 'web-mode)
+  ;;(flycheck-mode)
+  )
+(use-package web-mode
+  :config
+  (setq web-mode-enable-current-element-highlight t)
+  (add-hook 'web-mode-hook 'my-web-mode-hook)
+  )
 
 (use-package xterm-color
   :config
@@ -632,6 +680,44 @@ same directory as the org-buffer and insert a link to this file."
 ;;------------------------------------------------------------------------------
 ;; Misc
 ;;------------------------------------------------------------------------------
+(use-package mermaid-mode)
+
+(defun ffap-in-project ()
+  "Find file at point, relative to the project root, stripping leading /app/,
+and jump to line and column if specified like /app/foo.rb:42:5."
+  (interactive)
+  (let* ((project (project-current))
+         (root (if project (project-root project) default-directory))
+         (raw (thing-at-point 'filename t))
+         file line col)
+    (when raw
+      (setq raw (string-trim raw))
+      ;; Extract file, line, and column using regex
+      (if (string-match "\\(.*\\):\\([0-9]+\\):\\([0-9]+\\):$" raw)
+          (progn
+            (setq file (match-string 1 raw))
+            (setq line (string-to-number (match-string 2 raw)))
+            (setq col (string-to-number (match-string 3 raw))))
+        (setq file raw))
+      (message "Value: %s" file)
+      ;; Remove /app/ prefix if present
+      (when (string-prefix-p "/app/" file)
+        (setq file (string-remove-prefix "/app/" file)))
+      (let ((full-path (expand-file-name file root)))
+        (if (file-exists-p full-path)
+            (progn
+              (find-file full-path)
+              (when line
+                (goto-char (point-min))
+                (forward-line (1- line))
+                (when col
+                  (forward-char (1- col)))))
+          (message "File not found in project: %s" file))))))
+
+
+
+(use-package json-mode)
+
 (winner-mode)
 (defun my-toggle-full-window()
   "Toggle full view of selected window."
@@ -728,7 +814,6 @@ same directory as the org-buffer and insert a link to this file."
 '(aweshell :type git :host github :repo "manateelazycat/aweshell"))
 (require 'aweshell)
 
-(use-package tramp)
 
 (use-package hideshow 
   :config
@@ -755,97 +840,102 @@ same directory as the org-buffer and insert a link to this file."
    '(((:application tramp :protocol "flatpak")
       tramp-container-connection-local-default-flatpak-profile)
      ((:application tramp)
-      tramp-connection-local-default-system-profile tramp-connection-local-default-shell-profile)
-     ((:application eshell)
-      eshell-connection-default-profile)))
+      tramp-connection-local-default-system-profile
+      tramp-connection-local-default-shell-profile)
+     ((:application eshell) eshell-connection-default-profile)))
  '(connection-local-profile-alist
    '((tramp-container-connection-local-default-flatpak-profile
-      (tramp-remote-path "/app/bin" tramp-default-remote-path "/bin" "/usr/bin" "/sbin" "/usr/sbin" "/usr/local/bin" "/usr/local/sbin" "/local/bin" "/local/freeware/bin" "/local/gnu/bin" "/usr/freeware/bin" "/usr/pkg/bin" "/usr/contrib/bin" "/opt/bin" "/opt/sbin" "/opt/local/bin"))
+      (tramp-remote-path "/app/bin" tramp-default-remote-path "/bin"
+			 "/usr/bin" "/sbin" "/usr/sbin"
+			 "/usr/local/bin" "/usr/local/sbin"
+			 "/local/bin" "/local/freeware/bin"
+			 "/local/gnu/bin" "/usr/freeware/bin"
+			 "/usr/pkg/bin" "/usr/contrib/bin" "/opt/bin"
+			 "/opt/sbin" "/opt/local/bin"))
      (tramp-connection-local-darwin-ps-profile
-      (tramp-process-attributes-ps-args "-acxww" "-o" "pid,uid,user,gid,comm=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" "-o" "state=abcde" "-o" "ppid,pgid,sess,tty,tpgid,minflt,majflt,time,pri,nice,vsz,rss,etime,pcpu,pmem,args")
-      (tramp-process-attributes-ps-format
-       (pid . number)
-       (euid . number)
-       (user . string)
-       (egid . number)
-       (comm . 52)
-       (state . 5)
-       (ppid . number)
-       (pgrp . number)
-       (sess . number)
-       (ttname . string)
-       (tpgid . number)
-       (minflt . number)
-       (majflt . number)
-       (time . tramp-ps-time)
-       (pri . number)
-       (nice . number)
-       (vsize . number)
-       (rss . number)
-       (etime . tramp-ps-time)
-       (pcpu . number)
-       (pmem . number)
-       (args)))
+      (tramp-process-attributes-ps-args "-acxww" "-o"
+					"pid,uid,user,gid,comm=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+					"-o" "state=abcde" "-o"
+					"ppid,pgid,sess,tty,tpgid,minflt,majflt,time,pri,nice,vsz,rss,etime,pcpu,pmem,args")
+      (tramp-process-attributes-ps-format (pid . number)
+					  (euid . number)
+					  (user . string)
+					  (egid . number) (comm . 52)
+					  (state . 5) (ppid . number)
+					  (pgrp . number)
+					  (sess . number)
+					  (ttname . string)
+					  (tpgid . number)
+					  (minflt . number)
+					  (majflt . number)
+					  (time . tramp-ps-time)
+					  (pri . number)
+					  (nice . number)
+					  (vsize . number)
+					  (rss . number)
+					  (etime . tramp-ps-time)
+					  (pcpu . number)
+					  (pmem . number) (args)))
      (tramp-connection-local-busybox-ps-profile
-      (tramp-process-attributes-ps-args "-o" "pid,user,group,comm=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" "-o" "stat=abcde" "-o" "ppid,pgid,tty,time,nice,etime,args")
-      (tramp-process-attributes-ps-format
-       (pid . number)
-       (user . string)
-       (group . string)
-       (comm . 52)
-       (state . 5)
-       (ppid . number)
-       (pgrp . number)
-       (ttname . string)
-       (time . tramp-ps-time)
-       (nice . number)
-       (etime . tramp-ps-time)
-       (args)))
+      (tramp-process-attributes-ps-args "-o"
+					"pid,user,group,comm=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+					"-o" "stat=abcde" "-o"
+					"ppid,pgid,tty,time,nice,etime,args")
+      (tramp-process-attributes-ps-format (pid . number)
+					  (user . string)
+					  (group . string) (comm . 52)
+					  (state . 5) (ppid . number)
+					  (pgrp . number)
+					  (ttname . string)
+					  (time . tramp-ps-time)
+					  (nice . number)
+					  (etime . tramp-ps-time)
+					  (args)))
      (tramp-connection-local-bsd-ps-profile
-      (tramp-process-attributes-ps-args "-acxww" "-o" "pid,euid,user,egid,egroup,comm=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" "-o" "state,ppid,pgid,sid,tty,tpgid,minflt,majflt,time,pri,nice,vsz,rss,etimes,pcpu,pmem,args")
-      (tramp-process-attributes-ps-format
-       (pid . number)
-       (euid . number)
-       (user . string)
-       (egid . number)
-       (group . string)
-       (comm . 52)
-       (state . string)
-       (ppid . number)
-       (pgrp . number)
-       (sess . number)
-       (ttname . string)
-       (tpgid . number)
-       (minflt . number)
-       (majflt . number)
-       (time . tramp-ps-time)
-       (pri . number)
-       (nice . number)
-       (vsize . number)
-       (rss . number)
-       (etime . number)
-       (pcpu . number)
-       (pmem . number)
-       (args)))
+      (tramp-process-attributes-ps-args "-acxww" "-o"
+					"pid,euid,user,egid,egroup,comm=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+					"-o"
+					"state,ppid,pgid,sid,tty,tpgid,minflt,majflt,time,pri,nice,vsz,rss,etimes,pcpu,pmem,args")
+      (tramp-process-attributes-ps-format (pid . number)
+					  (euid . number)
+					  (user . string)
+					  (egid . number)
+					  (group . string) (comm . 52)
+					  (state . string)
+					  (ppid . number)
+					  (pgrp . number)
+					  (sess . number)
+					  (ttname . string)
+					  (tpgid . number)
+					  (minflt . number)
+					  (majflt . number)
+					  (time . tramp-ps-time)
+					  (pri . number)
+					  (nice . number)
+					  (vsize . number)
+					  (rss . number)
+					  (etime . number)
+					  (pcpu . number)
+					  (pmem . number) (args)))
      (tramp-connection-local-default-shell-profile
-      (shell-file-name . "/bin/sh")
-      (shell-command-switch . "-c"))
+      (shell-file-name . "/bin/sh") (shell-command-switch . "-c"))
      (tramp-connection-local-default-system-profile
-      (path-separator . ":")
-      (null-device . "/dev/null"))
-     (eshell-connection-default-profile
-      (eshell-path-env-list))))
+      (path-separator . ":") (null-device . "/dev/null"))
+     (eshell-connection-default-profile (eshell-path-env-list))))
+ '(dired-dwim-target 'dired-dwim-target-next)
+ '(dired-mouse-drag-files t)
  '(display-buffer-alist
-   '(("\\(?:.*shell\\)\\|\\(?:\\*grep\\)\\|\\(?:\\*compilation\\*\\)\\|\\(?:\\*vterminal - [0-9]+\\*\\)\\|\\(\\*scratch\\*\\)" display-buffer-in-side-window
-      (side . bottom)
-      (slot . 0)
+   '(("\\(?:.*shell\\)\\|\\(?:\\*grep\\)\\|\\(?:\\*compilation\\*\\)\\|\\(?:\\*vterminal - [0-9]+\\*\\)\\|\\(\\*scratch\\*\\)\\|\\(\\*Warnings\\*\\)"
+      display-buffer-in-side-window (side . bottom) (slot . 0)
       (window-height . 10))
-     ("\\*help\\*" display-buffer-in-side-window
-      (side . right)
-      (slot . 0)
-      (window-width . 80))))
+     ("\\*help\\*" display-buffer-in-side-window (side . right)
+      (slot . 0) (window-width . 80))))
+ '(eldoc-documentation-strategy 'eldoc-documentation-compose-eagerly)
+ '(org-download-method 'attach)
  '(safe-local-variable-values
-   '((eval setq-local conan-install-command #'conan-install-vihalp-lib)
+   '((eval add-hook 'before-save-hook
+	   #'clang-format-save-hook-for-this-buffer nil t)
+     (eval setq-local conan-install-command #'conan-install-vihalp-lib)
      (eval setq-local conan-build-command #'conan-build-vihalp-lib)
      (eval setq-local conan-install-command #'conan-install-poetry2)
      (eval setq-local conan-install-command #'conan-install-lock)
@@ -854,8 +944,7 @@ same directory as the org-buffer and insert a link to this file."
      (eval setq-local conan-install-command #'conan-install-poetry)
      (eval setq-local conan-build-command #'conan-build-poetry)
      (eval setq-local conan-build-format
-	   (lambda "build with conan + poetry"
-	     (profile)
+	   (lambda "build with conan + poetry" (profile)
 	     (message "hej")))
      (eval add-hook 'before-save-hook #'clang-format-buffer nil t)))
  '(warning-suppress-log-types '((comp))))
@@ -874,10 +963,10 @@ same directory as the org-buffer and insert a link to this file."
 
 (require 'dired-subtree)
 
-(recentf-mode 1)
-(setq recentf-max-menu-items 100)
-(setq recentf-max-saved-items 100)
-(run-at-time nil (* 5 60) 'recentf-save-list)
+;(recentf-mode 1)
+;(setq recentf-max-menu-items 100)
+;(setq recentf-max-saved-items 100)
+;(run-at-time nil (* 5 60) 'recentf-save-list)
 
 (use-package pikchr-mode)
 
@@ -894,14 +983,16 @@ same directory as the org-buffer and insert a link to this file."
 (setq make-backup-files nil)
 
 (use-package bookmark+
+  :ensure t :straight t
   :config 
   (evil-global-set-key 'normal (kbd "SPC x x") 'bookmark-jump)
   (evil-global-set-key 'normal (kbd "SPC x s") 'bookmark-set)
   (evil-global-set-key 'normal (kbd "SPC x l") 'bookmark-set)
   (evil-global-set-key 'normal (kbd "SPC x t") 'bookmark-tag)
   )
+(require 'bookmark+)
 
-(setq dired-mouse-drag-files t)
+;;(setq dired-mouse-drag-files t)
 
 (setq switch-to-buffer-obey-display-actions t)
 
@@ -934,6 +1025,19 @@ same directory as the org-buffer and insert a link to this file."
   (setq rmh-elfeed-org-files (list "~/.emacs.d/elfeed.org")))
 
 (use-package rg)
+
+(use-package obsidian
+  :config
+  (global-obsidian-mode t)
+  (obsidian-backlinks-mode t)
+  :custom
+  ;; location of obsidian vault
+  (obsidian-directory "~/.obsidian")
+  ;; Default location for new notes from `obsidian-capture'
+  (obsidian-inbox-directory "Inbox")
+  ;; Useful if you're going to be using wiki links
+  (markdown-enable-wiki-links t)
+  )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; sick
