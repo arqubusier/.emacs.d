@@ -40,6 +40,7 @@
   (straight-built-in-pseudo-packages '(emacs eldoc tree-sitter tree-sitter-langs nadvice python image-mode project flymake xref track-changes))
   )
 
+
 (require 'use-package-ensure)
 (setq use-package-always-ensure t)
 
@@ -71,6 +72,7 @@
   (when (memq window-system '(mac ns x))
   (exec-path-from-shell-initialize))
   )
+(setq exec-path (append exec-path '("~/.nvm/versions/node/v24.11.1/bin/")))
 (use-package tramp)
 
 ;;------------------------------------------------------------------------------
@@ -222,8 +224,8 @@ same directory as the org-buffer and insert a link to this file."
    consult-theme
    consult-ripgrep consult-git-grep consult-grep
    consult-bookmark consult-recent-file consult-xref
-   consult--source-bookmark consult--source-recent-file
-   consult--source-project-recent-file
+   consult-source-bookmark consult-source-recent-file
+   consult-source-project-recent-file
    :preview-key '(:debounce 0.2 any)
    :preview-key (kbd "M-."))
 
@@ -511,33 +513,26 @@ same directory as the org-buffer and insert a link to this file."
 )
 (add-hook 'web-mode-hook  'my-web-mode-hook)
 
-(add-hook 'prog-mode-hook #'yas-minor-mode-on)
 (use-package editorconfig
   :ensure t
   :config
   (editorconfig-mode 1))
-  (use-package copilot
-    :straight (:host github :repo "copilot-emacs/copilot.el" :files ("dist" "*.el"))
-    :ensure t
-    :config
-    (add-hook 'prog-mode-hook 'copilot-mode)
-    (define-key copilot-completion-map (kbd "M-c c") 'copilot-accept-completion)
-    (define-key copilot-completion-map (kbd "M-c n") 'copilot-next-completion)
-    (define-key copilot-completion-map (kbd "M-c p") 'copilot-previous-completion)
-    ;;(evil-define-key 'insert 'global (kbd "C-TAB") 'copilot-accept-completion)
-  )
+;(use-package copilot
+;  :straight (:host github :repo "copilot-emacs/copilot.el" :files ("dist" "*.el"))
+;  :ensure t
+;  :config
+;  (add-hook 'prog-mode-hook 'copilot-mode)
+;  (define-key copilot-completion-map (kbd "M-c c") 'copilot-accept-completion)
+;  (define-key copilot-completion-map (kbd "M-c n") 'copilot-next-completion)
+;  (define-key copilot-completion-map (kbd "M-c p") 'copilot-previous-completion)
+;  ;;(evil-define-key 'insert 'global (kbd "C-TAB") 'copilot-accept-completion)
+;)
 (use-package gptel
   :custom
   (gptel-use-curl nil)
   (gptel-stream nil)
   )
-  ;;(use-package copilot-chat
-  ;;  :straight (:host github :repo "chep/copilot-chat.el" :files ("*.el"))
-  ;;  :after (request org markdown-mode shell-maker)
-  ;;  :config
-  ;;  (setq copilot-chat-frontend 'org)
-  ;;  )
-(use-package sx)
+
 (defun project-debug ()
   (interactive)
   (let ((default-directory (vc-root-dir)))
@@ -654,24 +649,7 @@ same directory as the org-buffer and insert a link to this file."
   )
 
 (use-package ag)
-(use-package rust-mode)
 (use-package lua-mode)
-
-(defun my-web-mode-hook ()
-  "Hooks for Web mode."
-  ;; Indentation settings
-  (setq web-mode-markup-indent-offset 2)
-  (setq web-mode-css-indent-offset 2)
-  (setq web-mode-code-indent-offset 2)
-  ;; Enable JavaScript linting with Flycheck
-  ;;(flycheck-add-mode 'javascript-eslint 'web-mode)
-  ;;(flycheck-mode)
-  )
-(use-package web-mode
-  :config
-  (setq web-mode-enable-current-element-highlight t)
-  (add-hook 'web-mode-hook 'my-web-mode-hook)
-  )
 
 (use-package xterm-color
   :config
@@ -685,7 +663,7 @@ same directory as the org-buffer and insert a link to this file."
 (use-package yaml-mode)
 (use-package yasnippet
   :config
-(add-hook 'prog-mode-hook #'yas-minor-mode)
+;(add-hook 'prog-mode-hook #'yas-minor-mode)
 (setq yas-snippet-dirs '( "~/.emacs.d/snippets" ))
 (yas-reload-all)
   )
@@ -781,6 +759,22 @@ and jump to line and column if specified like /app/foo.rb:42:5."
  (setq-default visual-fill-column-center-text t)
  )
 
+
+
+(use-package org-present
+:config
+  (add-hook 'org-present-mode-hook
+            (lambda ()
+              (define-key evil-normal-state-local-map
+                (kbd "SPC n") 'org-present-next)
+              (define-key evil-normal-state-local-map
+		(kbd "SPC p") 'org-present-prev)
+              (define-key evil-normal-state-local-map
+		(kbd "SPC q") 'org-present-quit)
+	      ))
+  (add-hook 'org-present-mode-hook 'my/org-present-start)
+  (add-hook 'org-present-mode-quit-hook 'my/org-present-end)
+  )
 (defun my/org-present-start ()
   (menu-bar-mode 0)
   (tool-bar-mode 0)
@@ -799,21 +793,6 @@ and jump to line and column if specified like /app/foo.rb:42:5."
   ;; Stop centering the document
   (visual-fill-column-mode 0)
   (visual-line-mode 0))
-
-(use-package org-present
-:config
-  (add-hook 'org-present-mode-hook
-            (lambda ()
-              (define-key evil-normal-state-local-map
-                (kbd "SPC n") 'org-present-next)
-              (define-key evil-normal-state-local-map
-		(kbd "SPC p") 'org-present-prev)
-              (define-key evil-normal-state-local-map
-		(kbd "SPC q") 'org-present-quit)
-	      ))
-  (add-hook 'org-present-mode-hook 'my/org-present-start)
-  (add-hook 'org-present-mode-quit-hook 'my/org-present-end)
-  )
 
 (use-package smartparens)
 
@@ -1022,7 +1001,7 @@ and jump to line and column if specified like /app/foo.rb:42:5."
 
 (use-package markdown-mode
   :config
-  (setq makrdown-command "/usr/bin/pandoc"))
+  (setq markdown-command "/usr/bin/pandoc"))
 
 
 (require 'notifications)
@@ -1046,6 +1025,7 @@ and jump to line and column if specified like /app/foo.rb:42:5."
 
 (use-package rg)
 
+(make-directory "~/.obsidian" t)
 (use-package obsidian
   :config
   (global-obsidian-mode t)
@@ -1100,9 +1080,6 @@ and jump to line and column if specified like /app/foo.rb:42:5."
 (defun conan-install-default (profile)
 (format "euler devshell --commands='mkdir -p %s && cd %s &&  conan install -pr %s --update --build missing .. -e CMAKE_EXPORT_COMPILE_COMMANDS=ON ; exit'" profile profile profile))
 
-(defun conan-install-lock (profile)
-(format "euler devshell --commands='mkdir -p %s && cd %s &&  conan install -pr %s --update --build missing .. --lockfile=../config/base.lock ; exit'" profile profile profile))
-
 (defvar conan-build-command #'conan-build-plain)
 (defvar conan-install-command #'conan-install-plain)
 
@@ -1126,6 +1103,3 @@ and jump to line and column if specified like /app/foo.rb:42:5."
   (let ((default-directory (vc-root-dir)))
   (compile (funcall conan-install-command arg)))
   )
-
-
-(use-package vterm)
